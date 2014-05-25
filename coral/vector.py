@@ -56,6 +56,9 @@ class Canvas:
         self.state = PSDEFAULTS.copy()
         self.CESHOW = False
 
+    def resetbbox(self):
+        self.bbox = bbox.BBox()
+
     def setgray(self, v):
         if self.state['gray'] == v:
             return
