@@ -48,11 +48,11 @@ CESHOWDEF = """
 } bind def
 """
 
-class Page:
+class Canvas:
 
     def __init__(self):
         self.lines = []
-        self.bbox = None
+        self.bbox = BBox()
         self.state = PSDEFAULTS.copy()
         self.CESHOW = False
 
@@ -89,10 +89,7 @@ class Page:
         elif isinstance(stroke, (int, float)):
             self.setgray(stroke)
         self.lines.append("stroke")
-        if self.bbox is None:
-            self.bbox = bbox.BBox(points)
-        else:
-            self.bbox |= bbox.BBox(points)
+        self.bbox |= BBox(points)
 
     def addpolygon(self, points, fill=None, stroke=None):
         self.lines.append("newpath")
@@ -118,16 +115,44 @@ class Page:
             self.setgray(stroke)
         if stroke is not None:
             self.lines.append("stroke")
-        if self.bbox is None:
-            self.bbox = bbox.BBox(points)
-        else:
-            self.bbox |= bbox.BBox(points)
+        self.bbox |= BBox(points)
 
-    def ceshow(self, x, y, text, size, font="Times-Bold"):
+    def addtext(self, pos, text, size, font="Times-Bold"):
+        x, y = pos
         fmt = "({}) {} /{} {} {} ceshow"
         line = fmt.format(text, size, font, x, y)
         self.lines.append(line)
         self.CESHOW = True
+
+    def addimage(self, data, width, position=None, scale=1, color=False):
+        cwidth = (3 * width) if color else width
+        height = len(data) // cwidth
+        swidth = width * scale
+        sheight = height * scale
+        self.lines.append("gsave")
+        if position is not None:
+            self.lines.append("{} {} translate".format(*position))
+        fmt = "{} {} scale"
+        line = fmt.format(swidth, sheight)
+        self.lines.append(line)
+        fmt = "{} {} 8 [{} 0 0 {} 0 {}]"
+        line = fmt.format(width, height, width, -height, height)
+        self.lines.append(line)
+        self.lines.append("{<")
+        a, b = 0, cwidth
+        for i in range(height):
+            line = "".join("{:02x}".format(v) for v in data[a:b])
+            self.lines.append(line)
+            a = b
+            b += cwidth
+        self.lines.append(">}")
+        if color:
+            self.lines.append("false 3 colorimage")
+        else:
+            self.lines.append("image")
+        self.lines.append("grestore")
+        tx, ty = position or (0, 0)
+        self.bbox |= BBox((tx, ty), (swidth + tx, sheight + ty))
 
     def save(self, path, size=None, margin=0):
         bb = self.bbox
