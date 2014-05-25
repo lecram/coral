@@ -52,7 +52,7 @@ class Canvas:
 
     def __init__(self):
         self.lines = []
-        self.bbox = BBox()
+        self.bbox = bbox.BBox()
         self.state = PSDEFAULTS.copy()
         self.CESHOW = False
 
@@ -89,7 +89,7 @@ class Canvas:
         elif isinstance(stroke, (int, float)):
             self.setgray(stroke)
         self.lines.append("stroke")
-        self.bbox |= BBox(points)
+        self.bbox |= bbox.BBox(points)
 
     def addpolygon(self, points, fill=None, stroke=None):
         self.lines.append("newpath")
@@ -115,7 +115,7 @@ class Canvas:
             self.setgray(stroke)
         if stroke is not None:
             self.lines.append("stroke")
-        self.bbox |= BBox(points)
+        self.bbox |= bbox.BBox(points)
 
     def addtext(self, pos, text, size, font="Times-Bold"):
         x, y = pos
@@ -152,7 +152,7 @@ class Canvas:
             self.lines.append("image")
         self.lines.append("grestore")
         tx, ty = position or (0, 0)
-        self.bbox |= BBox((tx, ty), (swidth + tx, sheight + ty))
+        self.bbox |= bbox.BBox((tx, ty), (swidth + tx, sheight + ty))
 
     def save(self, path, size=None, margin=0):
         bb = self.bbox
