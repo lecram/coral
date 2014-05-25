@@ -77,6 +77,29 @@ class Canvas:
         self.lines.append(line)
         self.state['width'] = w
 
+    def addcircle(self, center, radius, fill=None, stroke=None):
+        x, y = center
+        r = radius
+        line = "{} {} {} 0 360 arc closepath".format(x, y, r)
+        self.lines.append(line)
+        if None not in (fill, stroke):
+            self.lines.append("gsave")
+        if isinstance(fill, tuple):
+            self.setcolor(*fill)
+        elif isinstance(fill, (int, float)):
+            self.setgray(fill)
+        if fill is not None:
+            self.lines.append("fill")
+        if None not in (fill, stroke):
+            self.lines.append("grestore")
+        if isinstance(stroke, tuple):
+            self.setcolor(*stroke)
+        elif isinstance(stroke, (int, float)):
+            self.setgray(stroke)
+        if stroke is not None:
+            self.lines.append("stroke")
+        self.bbox |= bbox.BBox((x - r, y - r), (x + r, y + r))
+
     def addpolyline(self, points, stroke=None):
         self.lines.append("newpath")
         line = "{} {} moveto".format(*points[0])
