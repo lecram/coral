@@ -51,6 +51,16 @@ def getall(table, key, query):
         if row._asdict()[key] == query:
             yield row
 
+def indexby(table, key):
+    indexed = {}
+    keys = [k for k in table[0]._fields if k != key]
+    Row = collections.namedtuple("Row", keys)
+    for row in table:
+        d = row._asdict()
+        newrow = Row(*(d[k] for k in keys))
+        indexed[d[key]] = newrow
+    return indexed
+
 def addkey(table, key, func):
     newkeys = table[0]._fields + (key,)
     Row = collections.namedtuple("Row", newkeys)
