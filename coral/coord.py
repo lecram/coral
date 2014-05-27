@@ -82,9 +82,10 @@ def radiusat(lat, ellipsoid=None):
     radius = math.sqrt(num / den)
     return radius
 
-def haversine(lon1, lat1, lon2, lat2):
+def haversine(lon1, lat1, lon2, lat2, R=None):
     "Return the distance in meters between two points."
-    R = radiusat((lat1 + lat2) / 2)
+    if R is None:
+        R = radiusat((lat1 + lat2) / 2)
     dLat = math.radians(lat2 - lat1)
     dLon = math.radians(lon2 - lon1)
     lat1 = math.radians(lat1)
