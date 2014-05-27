@@ -106,6 +106,35 @@ def bearing(lon1, lat1, lon2, lat2):
     b = math.degrees(math.atan2(y, x))
     return b
 
+def destination(lon, lat, bear, dist, R=None):
+    """Given a starting point, a bearing and a distance, return the ending point.
+    >>> from coral import coord
+    >>> r = 1000
+    >>> d = coord.haversine(40, 20, 45, 22, r)
+    >>> b = coord.bearing(40, 20, 45, 22)
+    >>> coord.destination(40, 20, b, d, r)
+    (45.0, 21.999999999999996)
+    >>>
+    """
+
+    # Everything need to be converted into radians.
+    rlon, rlat = math.radians(lon), math.radians(lat)
+    tc = math.radians(bear)
+    if R is None:
+        R = radiusat(lat)
+    d = dist / R
+    coslat = math.cos(rlat)
+    sinlat = math.sin(rlat)
+    cosd = math.cos(d)
+    sind = math.sin(d)
+    costc = math.cos(tc)
+    sintc = math.sin(tc)
+    lat = math.asin(sinlat*cosd + coslat*sind*costc)
+    dlon = math.atan2(sintc*sind*coslat, cosd - sinlat*math.sin(lat))
+    lon = corangle(rlon - dlon)
+    lon, lat = math.degrees(lon), math.degrees(lat)
+    return lon, lat
+
 def bearing2cardinal(b):
     cardinals = [
         'N', 'NNW', 'NW', 'WNW',
