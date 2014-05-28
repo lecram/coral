@@ -73,6 +73,15 @@ class Canvas:
         self.lines.append(line)
         self.state['color'] = (r, g, b)
 
+    def setink(self, *args):
+        n = len(args)
+        if n == 1:
+            self.setgray(*args)
+        elif n == 3:
+            self.setcolor(*args)
+        else:
+            raise ValueError("wrong number of arguments: {}".format(n+1))
+
     def setwidth(self, w):
         if self.state['width'] == w:
             return
