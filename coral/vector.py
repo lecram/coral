@@ -222,7 +222,7 @@ class Canvas:
         pspath = "/tmp/tempeps.ps"
         self.save(pspath, *args, **kwargs)
         cmd  = "gs -q -dNOPAUSE -dBATCH -dEPSCrop "
-        cmd += "-sDEVICE={} -sOutputFile={} {}".format(device, path, pspath)
+        cmd += "-sDEVICE={} -sOutputFile='{}' {}".format(device, path, pspath)
         ret = subprocess.call(cmd, shell=True)
         os.remove(pspath)
         return ret
