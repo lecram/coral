@@ -25,6 +25,9 @@ from . import bbox
 
 # ToDo:
 #   - redefine some operators (lineto) to generate smaller files
+#   - refactor methods to use .setink()
+#   - add support for setdash
+#   - generalize state dict
 
 PSDEFAULTS = dict(
   color = (0, 0, 0),
