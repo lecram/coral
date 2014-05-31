@@ -147,6 +147,29 @@ class Canvas:
             self.lines.append("stroke")
         self.bbox |= bbox.BBox(points)
 
+    def addroundedpolygon(self, points, radius, fill=None, stroke=None):
+        self.lines.append("newpath")
+        (x1, y1), (x2, y2) = points[:2]
+        startend = ((x1 + x2) / 2, (y1 + y2) / 2)
+        poly = [startend] + points[1:] + points[:1]
+        line = "{} {} moveto".format(*poly[0])
+        self.lines.append(line)
+        for (x1, y1), (x2, y2) in zip(poly[1:], poly[2:] + poly[:1]):
+            line = "{} {} {} {} {} arcto".format(x1, y1, x2, y2, radius)
+            self.lines.append(line)
+        self.lines.append("closepath")
+        if fill is not None:
+            if stroke is not None:
+                self.lines.append("gsave")
+            self.setink(fill)
+            self.lines.append("fill")
+        if stroke is not None:
+            if fill is not None:
+                self.lines.append("grestore")
+            self.setink(stroke)
+            self.lines.append("stroke")
+        self.bbox |= bbox.BBox(points)
+
     def addtext(self, pos, text, size, font="Times-Bold"):
         x, y = pos
         fmt = "({}) {} /{} {} {} ceshow"
