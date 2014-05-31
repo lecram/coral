@@ -25,13 +25,13 @@ from . import bbox
 
 # ToDo:
 #   - redefine some operators (lineto) to generate smaller files
-#   - add support for setdash
 #   - generalize state dict
 
 PSDEFAULTS = dict(
   color = (0, 0, 0),
   gray = 0,
   width = 1,
+  dash = ([], 0),
 )
 
 CESHOWDEF = """
@@ -90,6 +90,14 @@ class Canvas:
         line = "{} setlinewidth".format(w)
         self.lines.append(line)
         self.state['width'] = w
+
+    def setdash(self, pattern, offset=0):
+        if self.state['dash'] == (pattern, offset):
+            return
+        psarray = "[{}]".format(" ".join(map(str, pattern)))
+        line = "{} {} setdash".format(psarray, offset)
+        self.lines.append(line)
+        self.state['dash'] = (pattern, offset)
 
     def addcircle(self, center, radius, fill=None, stroke=None):
         x, y = center
