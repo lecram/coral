@@ -76,14 +76,14 @@ class Canvas:
         self.lines.append(line)
         self.state['color'] = (r, g, b)
 
-    def setink(self, *args):
-        n = len(args)
-        if n == 1:
-            self.setgray(*args)
-        elif n == 3:
-            self.setcolor(*args)
+    def setink(self, ink):
+        if isinstance(ink, tuple):
+            self.setcolor(*ink)
+        elif isinstance(ink, (int, float)):
+            self.setgray(ink)
         else:
-            raise ValueError("wrong number of arguments: {}".format(n+1))
+            tname = type(ink).__name__
+            raise TypeError("expected int, float or 3-tuple, got {}".format(tname))
 
     def setwidth(self, w):
         if self.state['width'] == w:
@@ -97,21 +97,15 @@ class Canvas:
         r = radius
         line = "{} {} {} 0 360 arc closepath".format(x, y, r)
         self.lines.append(line)
-        if None not in (fill, stroke):
-            self.lines.append("gsave")
-        if isinstance(fill, tuple):
-            self.setcolor(*fill)
-        elif isinstance(fill, (int, float)):
-            self.setgray(fill)
         if fill is not None:
+            if stroke is not None:
+                self.lines.append("gsave")
+            self.setink(fill)
             self.lines.append("fill")
-        if None not in (fill, stroke):
-            self.lines.append("grestore")
-        if isinstance(stroke, tuple):
-            self.setcolor(*stroke)
-        elif isinstance(stroke, (int, float)):
-            self.setgray(stroke)
         if stroke is not None:
+            if fill is not None:
+                self.lines.append("grestore")
+            self.setink(stroke)
             self.lines.append("stroke")
         self.bbox |= bbox.BBox((x - r, y - r), (x + r, y + r))
 
@@ -122,10 +116,7 @@ class Canvas:
         for point in points[1:]:
             line = "{} {} lineto".format(*point)
             self.lines.append(line)
-        if isinstance(stroke, tuple):
-            self.setcolor(*stroke)
-        elif isinstance(stroke, (int, float)):
-            self.setgray(stroke)
+        self.setink(stroke)
         self.lines.append("stroke")
         self.bbox |= bbox.BBox(points)
 
@@ -137,21 +128,15 @@ class Canvas:
             line = "{} {} lineto".format(*point)
             self.lines.append(line)
         self.lines.append("closepath")
-        if None not in (fill, stroke):
-            self.lines.append("gsave")
-        if isinstance(fill, tuple):
-            self.setcolor(*fill)
-        elif isinstance(fill, (int, float)):
-            self.setgray(fill)
         if fill is not None:
+            if stroke is not None:
+                self.lines.append("gsave")
+            self.setink(fill)
             self.lines.append("fill")
-        if None not in (fill, stroke):
-            self.lines.append("grestore")
-        if isinstance(stroke, tuple):
-            self.setcolor(*stroke)
-        elif isinstance(stroke, (int, float)):
-            self.setgray(stroke)
         if stroke is not None:
+            if fill is not None:
+                self.lines.append("grestore")
+            self.setink(stroke)
             self.lines.append("stroke")
         self.bbox |= bbox.BBox(points)
 
