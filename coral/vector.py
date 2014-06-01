@@ -152,7 +152,7 @@ class Canvas:
         (x1, y1), (x2, y2) = points[:2]
         startend = ((x1 + x2) / 2, (y1 + y2) / 2)
         poly = [startend] + points[1:] + points[:1]
-        line = "{} {} moveto".format(*poly[0])
+        line = "{} {} moveto".format(*startend)
         self.lines.append(line)
         for (x1, y1), (x2, y2) in zip(poly[1:], poly[2:] + poly[:1]):
             line = "{} {} {} {} {} arcto".format(x1, y1, x2, y2, radius)
