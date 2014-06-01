@@ -58,6 +58,14 @@ class Canvas:
         self.state = PSDEFAULTS.copy()
         self.CESHOW = False
 
+    def copy(self):
+        canvas = Canvas()
+        canvas.lines = self.lines[:]
+        canvas.bbox = self.bbox.copy()
+        canvas.state = self.state.copy()
+        canvas.CESHOW = self.CESHOW
+        return canvas
+
     def resetbbox(self):
         self.bbox = bbox.BBox()
 
