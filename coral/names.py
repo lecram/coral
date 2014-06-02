@@ -129,6 +129,45 @@ def mapping(keys, values):
     m.sort(key=lambda match: -match.score)
     return m
 
+def abbreviations(names, length):
+    norm = lambda name: ascii(name.upper())
+    inames = [(i, norm(name)) for i, name in enumerate(names)]
+    inames.sort(key=len)
+    counter = collections.Counter()
+    for i, name in inames:
+        counter.update(set(name))
+    hist = dict(counter)
+    abbdict = {}
+    abbset = set()
+    for i, name in inames:
+        tname = name[:]
+        for extra in extras:
+            tname = tname.replace(" {} ".format(extra), " ")
+        if len(tname) <= length:
+            abb = tname
+        else:
+            ics = list(enumerate(tname))
+            initis = [0] + [i+1 for i, c in ics if c == " "]
+            #for j in range(len(initis)):
+            #    initis[j] -= j
+            ics = [(i, c) for i, c in ics if c != " "]
+            ics.sort(key=lambda ic: hist[ic[1]])
+            for j, initi in enumerate(initis):
+                ic = (initi, tname[initi])
+                ics.remove(ic)
+                ics.insert(j, ic)
+            for comb in itertools.combinations(ics, length):
+                comb = list(comb)
+                comb.sort(key=lambda ic: ic[0])
+                abb = "".join(c for i, c in comb)
+                if abb not in abbset:
+                    break
+            else:
+                raise Exception("unable to generate unique abbreviation")
+        abbdict[i] = abb
+        abbset.add(abb)
+    return {name: abbdict[i] for i, name in enumerate(names)}
+
 if __name__ == "__main__":
     l1 = ['abc', 'def', 'ghi', 'jkl']
     l2 = ['ac', 'def', 'gh', 'jekgl']
