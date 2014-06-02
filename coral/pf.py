@@ -310,14 +310,3 @@ class Reader:
 
     def close(self):
         self.pf.close()
-
-if __name__ == "__main__":
-    shppath = "/home/marcel/Downloads/ne_110m_land"
-    pfpath = "land.p"
-    getname = lambda record: "_".join(map(str, record))
-    errs = shp2pf(shppath, pfpath, getname, 2)
-    from . import stats
-    print(stats.avg(errs))
-    print(stats.std_dev(errs))
-    print(stats.min(errs))
-    print(stats.max(errs))
