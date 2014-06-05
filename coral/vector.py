@@ -131,7 +131,8 @@ class Canvas:
         for point in points[1:]:
             line = "{} {} lineto".format(*point)
             self.lines.append(line)
-        self.setink(stroke)
+        if stroke is not None:
+            self.setink(stroke)
         self.lines.append("stroke")
         self.bbox |= bbox.BBox(points)
 
