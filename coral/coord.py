@@ -135,6 +135,25 @@ def destination(lon, lat, bear, dist, R=None):
     lon, lat = math.degrees(lon), math.degrees(lat)
     return lon, lat
 
+def midpoint(lon1, lat1, lon2, lat2):
+    dlon = math.radians(lon2 - lon1)
+    lon1 = math.radians(lon1)
+    lat1 = math.radians(lat1)
+    lat2 = math.radians(lat2)
+    cosdlon = math.cos(dlon)
+    sindlon = math.sin(dlon)
+    coslat1 = math.cos(lat1)
+    sinlat1 = math.sin(lat1)
+    coslat2 = math.cos(lat2)
+    sinlat2 = math.sin(lat2)
+    bx = coslat2 * cosdlon
+    by = coslat2 * sindlon
+    lon3 = lon1 + math.atan2(by, coslat1 + bx)
+    sqcoslat1bx = (coslat1 + bx) * (coslat1 + bx)
+    lat3 = math.atan2(sinlat1 + sinlat2, math.sqrt(sqcoslat1bx + by*by))
+    lon3, lat3 = math.degrees(lon3), math.degrees(lat3)
+    return lon3, lat3
+
 def bearing2cardinal(b):
     cardinals = [
         'N', 'NNW', 'NW', 'WNW',
