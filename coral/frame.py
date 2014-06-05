@@ -94,14 +94,10 @@ class Frame:
     def cachenames(self, key, pff):
         lines = []
         for name in tqdm.tqdm(pff.names):
-            isinside = False
             for points in pff.get(name):
-                for lon, lat in points:
-                    point = self.projection.geo2rect(lon, lat)
-                    if self.bounding.has_point(point):
-                        isinside = True
-                        break
-                if isinside:
+                xys = [self.projection.geo2rect(lon, lat) for lon, lat in points]
+                bb = bbox.BBox(xys)
+                if self.bounding.collide(bb):
                     lines.append(name + "\n")
                     break
         with open("{}.names".format(key), "w") as f:
