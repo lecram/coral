@@ -150,10 +150,6 @@ def bearing2hours(b):
     b = (b + 360) % 360
     return 12 - b / 30
 
-def planify(lls):
-    xys = [(lon2x(lon), lat2y(lat)) for lon, lat in lls]
-    return xys
-
 def simplify(xys, scl, dot=1):
     xysr = [(int(x // (scl * dot) * dot), int(y // (scl * dot) * dot)) for x, y in xys]
     xa, ya = xysr[0]
