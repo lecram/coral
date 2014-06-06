@@ -84,7 +84,8 @@ class Frame:
             }
         }
         with open(path, "w") as f:
-            json.dump(d, f)
+            json.dump(d, f, indent=4)
+            f.write("\n")
 
     def planify(self, points):
         points = [self.projection.geo2rect(lon, lat) for lon, lat in points]
