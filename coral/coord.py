@@ -28,6 +28,8 @@ Map projections and polygon simplification.
 import math
 import collections
 
+from . import bbox
+
 class ProjectionError(Exception): pass
 
 # See http://www.epsg-registry.org/ for datums.
@@ -185,6 +187,45 @@ def simplify(xys, scl, dot=1):
     if xyss[-1] == xyss[0]:
         xyss.pop()
     return xyss
+
+def geocentroid(region, bb=None, epsilon=None):
+    # region is a list of polygons in geographic coordinates.
+    if bb is None:
+        for poly in region:
+            bb = bbox.BBox(poly) | bb
+    if epsilon is None:
+        epsilon = 1e-10
+    c0 = bb.center()
+    while True:
+        # Should probably use Lambert Azimuthal equal-area instead.
+        proj = Stereographic(c0)
+        cw = []
+        for poly in region:
+            xys = [proj.geo2rect(lon, lat) for lon, lat in poly]
+            # http://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
+            cx = cy = sa = 0
+            for (x0, y0), (x1, y1) in zip(xys, xys[1:] + xys[:1]):
+                f = x0 * y1 - x1 * y0
+                cx += (x0 + x1) * f
+                cy += (y0 + y1) * f
+                sa += f
+            d = 3 * sa
+            cx /= d
+            cy /= d
+            cw.append(((cx, cy), sa))
+        cx = cy = sw = 0
+        for (x, y), w in cw:
+            cx += x * w
+            cy += y * w
+            sw += w
+        cx /= sw
+        cy /= sw
+        c1 = proj.rect2geo(cx, cy)
+        if abs(c1[0] - c0[0]) <= epsilon and abs(c1[1] - c0[1]) <= epsilon:
+            break
+        c0 = c1
+    return c1
+
 
 class Proj:
 
