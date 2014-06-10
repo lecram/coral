@@ -19,7 +19,7 @@ class TestBBox(unittest.TestCase):
         t = 2 * math.pi
         x = (cx + r * math.cos(t*i/n) for i in range(n))
         y = (cy + r * math.sin(t*i/n) for i in range(n))
-        ps = list(zip(x, y))
+        ps = zip(x, y)
         bb2 = bbox.BBox(ps)
         self.assertEqual(bb1, bb2)
 
