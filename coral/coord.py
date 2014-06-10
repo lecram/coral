@@ -27,6 +27,7 @@ Map projections and polygon simplification.
 
 import math
 import collections
+import itertools
 
 from . import bbox
 
@@ -172,11 +173,12 @@ def bearing2hours(b):
     return 12 - b / 30
 
 def simplify(xys, scl, dot=1):
-    xysr = [(int(x // (scl * dot) * dot), int(y // (scl * dot) * dot)) for x, y in xys]
-    xa, ya = xysr[0]
-    xb, yb = xysr[1]
-    xyss = [(xa, ya), (xb, yb)]
-    for xc, yc in xysr[2:]:
+    xysr = ((int(x // (scl * dot) * dot), int(y // (scl * dot) * dot)) for x, y in xys)
+    pa = xa, ya = next(xysr)
+    pb = xb, yb = next(xysr)
+    e1 = [pa, pb]
+    xyss = e1[:]
+    for xc, yc in itertools.chain(xysr, e1):
         a = (xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)
         if a == 0:
             xyss[-1] = xb, yb = xc, yc
@@ -184,8 +186,7 @@ def simplify(xys, scl, dot=1):
             xyss.append((xc, yc))
             xa, ya = xb, yb
             xb, yb = xc, yc
-    if xyss[-1] == xyss[0]:
-        xyss.pop()
+    xyss[-2:] = [p for p in xyss[-2:] if p not in e1]
     return xyss
 
 def geocentroid(region, bb=None, epsilon=None):
