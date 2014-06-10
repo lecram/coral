@@ -35,17 +35,17 @@ class BBox:
         if nargs == 0:
             self.x0 = self.y0 = self.x1 = self.y1 = 0
         elif nargs == 1:
-            points, = args
-            length = len(points)
-            xs = [None] * length
-            ys = [None] * length
-            for i, (x, y) in enumerate(points):
-                xs[i] = x
-                ys[i] = y
-            self.x0 = min(xs)
-            self.y0 = min(ys)
-            self.x1 = max(xs)
-            self.y1 = max(ys)
+            points = iter(args[0])
+            self.x0, self.y0  = self.x1, self.y1 = next(points)
+            for x, y in points:
+                if x < self.x0:
+                    self.x0 = x
+                elif x > self.x1:
+                    self.x1 = x
+                if y < self.y0:
+                    self.y0 = y
+                elif y > self.y1:
+                    self.y1 = y
         elif nargs == 2:
             p0, p1 = args
             self.x0, self.y0 = p0
