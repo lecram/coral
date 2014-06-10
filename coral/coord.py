@@ -173,7 +173,8 @@ def bearing2hours(b):
     return 12 - b / 30
 
 def simplify(xys, scl, dot=1):
-    xysr = ((int(x // (scl * dot) * dot), int(y // (scl * dot) * dot)) for x, y in xys)
+    xysr = ((int(x // (scl * dot) * dot), int(y // (scl * dot) * dot))
+            for x, y in xys)
     pa = xa, ya = next(xysr)
     pb = xb, yb = next(xysr)
     e1 = [pa, pb]
