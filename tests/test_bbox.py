@@ -1,3 +1,5 @@
+import math
+import random
 import unittest
 
 from coral import bbox
@@ -8,6 +10,18 @@ class TestBBox(unittest.TestCase):
         self.a = bbox.BBox((20, 30), (50, 40))
         self.b = self.a.scale(2)
         self.c = self.b.translate(self.b.width() / 2, 0)
+
+    def test_bounding(self):
+        cx, cy = random.randint(-100, 100), random.randint(-100, 100)
+        r = random.randint(20, 100)
+        bb1 = bbox.BBox((cx-r, cy-r), (cx+r, cy+r))
+        n = 1000
+        t = 2 * math.pi
+        x = (cx + r * math.cos(t*i/n) for i in range(n))
+        y = (cy + r * math.sin(t*i/n) for i in range(n))
+        ps = list(zip(x, y))
+        bb2 = bbox.BBox(ps)
+        self.assertEqual(bb1, bb2)
 
     def test_width_height_area(self):
         self.assertEqual(self.a.area(), self.a.width() * self.a.height())
