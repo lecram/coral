@@ -87,9 +87,9 @@ class Frame:
             json.dump(d, f, indent=4)
             f.write("\n")
 
-    def planify(self, points):
+    def planify(self, points, closed=True):
         points = [self.projection.geo2rect(lon, lat) for lon, lat in points]
-        points = coord.simplify(points, self.scale)
+        points = coord.simplify(points, self.scale, closed=closed)
         return points
 
     def cachenames(self, key, pff):

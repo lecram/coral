@@ -172,19 +172,25 @@ def bearing2hours(b):
     b = (b + 360) % 360
     return 12 - b / 30
 
-def simplify(xys, scl, dot=1):
+def simplify(xys, scl, dot=1, closed=True):
     xysr = ((round(x / (scl * dot) * dot), round(y / (scl * dot) * dot))
             for x, y in xys)
     pa = xa, ya = next(xysr)
     pb = xb, yb = next(xysr)
     xc, yc = pb
-    it = itertools.chain(xysr, [pa, pb])
+    if closed:
+        it = itertools.chain(xysr, [pa, pb])
+    else:
+        yield pa
+        it = xysr
     p = None
     while True:
         while (xc, yc) == (xb, yb):
             try:
                 xc, yc = next(it)
             except StopIteration:
+                if not closed and (xc, yc) != p:
+                    p = yield (xc, yc)
                 return
         a = (xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)
         if a != 0:
