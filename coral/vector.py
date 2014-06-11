@@ -125,23 +125,49 @@ class Canvas:
         self.bbox |= bbox.BBox((x - r, y - r), (x + r, y + r))
 
     def addpolyline(self, points, stroke=None):
+        points = iter(points)
+        try:
+            x0, y0 = x1, y1 = next(points)
+        except StopIteration:
+            return
         self.lines.append("newpath")
-        line = "{} {} moveto".format(*points[0])
+        line = "{} {} moveto".format(x0, y0)
         self.lines.append(line)
-        for point in points[1:]:
-            line = "{} {} lineto".format(*point)
+        for x, y in points:
+            if x < x0:
+                x0 = x
+            elif x > x1:
+                x1 = x
+            if y < y0:
+                y0 = y
+            elif y > y1:
+                y1 = y
+            line = "{} {} lineto".format(x, y)
             self.lines.append(line)
         if stroke is not None:
             self.setink(stroke)
         self.lines.append("stroke")
-        self.bbox |= bbox.BBox(points)
+        self.bbox |= bbox.BBox((x0, y0), (x1, y1))
 
     def addpolygon(self, points, fill=None, stroke=None):
+        points = iter(points)
+        try:
+            x0, y0 = x1, y1 = next(points)
+        except StopIteration:
+            return
         self.lines.append("newpath")
-        line = "{} {} moveto".format(*points[0])
+        line = "{} {} moveto".format(x0, y1)
         self.lines.append(line)
-        for point in points[1:]:
-            line = "{} {} lineto".format(*point)
+        for x, y in points:
+            if x < x0:
+                x0 = x
+            elif x > x1:
+                x1 = x
+            if y < y0:
+                y0 = y
+            elif y > y1:
+                y1 = y
+            line = "{} {} lineto".format(x, y)
             self.lines.append(line)
         self.lines.append("closepath")
         if fill is not None:
@@ -154,7 +180,7 @@ class Canvas:
                 self.lines.append("grestore")
             self.setink(stroke)
             self.lines.append("stroke")
-        self.bbox |= bbox.BBox(points)
+        self.bbox |= bbox.BBox((x0, y0), (x1, y1))
 
     def addroundedpolygon(self, points, radius, fill=None, stroke=None):
         self.lines.append("newpath")
