@@ -173,22 +173,26 @@ def bearing2hours(b):
     return 12 - b / 30
 
 def simplify(xys, scl, dot=1):
-    xysr = ((int(x // (scl * dot) * dot), int(y // (scl * dot) * dot))
+    xysr = ((round(x / (scl * dot) * dot), round(y / (scl * dot) * dot))
             for x, y in xys)
     pa = xa, ya = next(xysr)
     pb = xb, yb = next(xysr)
-    e1 = [pa, pb]
-    xyss = e1[:]
-    for xc, yc in itertools.chain(xysr, e1):
+    xc, yc = pb
+    it = itertools.chain(xysr, [pa, pb])
+    p = None
+    while True:
+        while (xc, yc) == (xb, yb):
+            try:
+                xc, yc = next(it)
+            except StopIteration:
+                return
         a = (xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)
-        if a == 0:
-            xyss[-1] = xb, yb = xc, yc
-        else:
-            xyss.append((xc, yc))
-            xa, ya = xb, yb
-            xb, yb = xc, yc
-    xyss[-2:] = [p for p in xyss[-2:] if p not in e1]
-    return xyss
+        if a != 0:
+            if (xb, yb) != p:
+                p = (xb, yb)
+                yield p
+        xa, ya = xb, yb
+        xb, yb = xc, yc
 
 def geocentroid(region, bb=None, epsilon=None):
     # region is a list of polygons in geographic coordinates.
