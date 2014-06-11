@@ -189,8 +189,7 @@ def simplify(xys, scl, dot=1):
         a = (xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)
         if a != 0:
             if (xb, yb) != p:
-                p = (xb, yb)
-                yield p
+                p = yield (xb, yb)
         xa, ya = xb, yb
         xb, yb = xc, yc
 
