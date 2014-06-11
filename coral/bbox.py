@@ -38,14 +38,10 @@ class BBox:
             points = iter(args[0])
             self.x0, self.y0  = self.x1, self.y1 = next(points)
             for x, y in points:
-                if x < self.x0:
-                    self.x0 = x
-                elif x > self.x1:
-                    self.x1 = x
-                if y < self.y0:
-                    self.y0 = y
-                elif y > self.y1:
-                    self.y1 = y
+                if   x < self.x0: self.x0 = x
+                elif x > self.x1: self.x1 = x
+                if   y < self.y0: self.y0 = y
+                elif y > self.y1: self.y1 = y
         elif nargs == 2:
             p0, p1 = args
             self.x0, self.y0 = p0

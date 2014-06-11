@@ -134,14 +134,10 @@ class Canvas:
         line = "{} {} moveto".format(x0, y0)
         self.lines.append(line)
         for x, y in points:
-            if x < x0:
-                x0 = x
-            elif x > x1:
-                x1 = x
-            if y < y0:
-                y0 = y
-            elif y > y1:
-                y1 = y
+            if   x < x0: x0 = x
+            elif x > x1: x1 = x
+            if   y < y0: y0 = y
+            elif y > y1: y1 = y
             line = "{} {} lineto".format(x, y)
             self.lines.append(line)
         if stroke is not None:
@@ -159,14 +155,10 @@ class Canvas:
         line = "{} {} moveto".format(x0, y1)
         self.lines.append(line)
         for x, y in points:
-            if x < x0:
-                x0 = x
-            elif x > x1:
-                x1 = x
-            if y < y0:
-                y0 = y
-            elif y > y1:
-                y1 = y
+            if   x < x0: x0 = x
+            elif x > x1: x1 = x
+            if   y < y0: y0 = y
+            elif y > y1: y1 = y
             line = "{} {} lineto".format(x, y)
             self.lines.append(line)
         self.lines.append("closepath")
