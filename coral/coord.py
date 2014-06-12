@@ -190,12 +190,14 @@ def simplify(xys, scl, dot=1, closed=True):
                 xc, yc = next(it)
             except StopIteration:
                 if not closed and (xc, yc) != p:
-                    p = yield (xc, yc)
+                    p = xc, yc
+                    yield p
                 return
         a = (xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)
         if a != 0:
             if (xb, yb) != p:
-                p = yield (xb, yb)
+                p = xb, yb
+                yield p
         xa, ya = xb, yb
         xb, yb = xc, yc
 
