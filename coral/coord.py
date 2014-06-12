@@ -183,21 +183,33 @@ def simplify(xys, scl, dot=1, closed=True):
     else:
         yield pa
         it = xysr
-    p = None
+    p1 = p2 = None
     while True:
         while (xc, yc) == (xb, yb):
             try:
                 xc, yc = next(it)
             except StopIteration:
-                if not closed and (xc, yc) != p:
-                    p = xc, yc
-                    yield p
+                if p2 is not None:
+                    yield p2
+                if not closed and (xc, yc) != p2:
+                    yield xc, yc
                 return
         a = (xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)
         if a != 0:
-            if (xb, yb) != p:
-                p = xb, yb
-                yield p
+            if (xb, yb) == p2:
+                xa, ya = p1
+                a = (xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)
+                if a != 0:
+                    if p2 is not None:
+                        yield p2
+                    p2 = xb, yb
+                else:
+                    p2 = None
+            else:
+                p1 = xa, ya
+                if p2 is not None:
+                    yield p2
+                p2 = xb, yb
         xa, ya = xb, yb
         xb, yb = xc, yc
 
