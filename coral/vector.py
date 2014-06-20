@@ -20,8 +20,10 @@
 
 import os
 import subprocess
+import tempfile
+from functools import reduce
 
-from . import bbox
+from . import bbox, tqdm
 
 # ToDo:
 #   - redefine some operators (lineto) to generate smaller files
@@ -277,3 +279,22 @@ def export(pspath, output, device='png256'):
     cmd  = "gs -q -dNOPAUSE -dBATCH -dEPSCrop "
     cmd += "-sDEVICE={} -sOutputFile={} {}".format(device, output, pspath)
     return subprocess.call(cmd, shell=True)
+
+def animation(gifpath, frames, delay=10, size=600, margin=5):
+    # frames is a list of Canvasses.
+    n = len(frames)
+    length = len(str(n))
+    with tempfile.TemporaryDirectory() as folder:
+        fmt = "{{:0{}}}.png".format(length)
+        bb = reduce(lambda a, b: a | b, (c.bbox for c in frames), bbox.BBox())
+        bb = bb.scale(1.05)
+        paths = []
+        for i, canvas in tqdm.tqdm(enumerate(frames), total=n, desc="anim"):
+            canvas.bbox = bb
+            path = os.path.join(folder, fmt.format(i))
+            canvas.export(path, device="png48", size=size, margin=margin)
+            paths.append(path)
+        paths = " ".join(paths)
+        cmd = "convert -delay {} -loop 0 {} {}".format(delay, paths, gifpath)
+        status = subprocess.call(cmd, shell=True)
+    return status
