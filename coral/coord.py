@@ -172,46 +172,49 @@ def bearing2hours(b):
     b = (b + 360) % 360
     return 12 - b / 30
 
+def collinear(a, b, c):
+    xa, ya = a
+    xb, yb = b
+    xc, yc = c
+    c = (xa - xc) * (yb - ya) == (xa - xb) * (yc - ya)
+    return c
+
 def simplify(xys, scl, dot=1, closed=True):
     xysr = ((round(x / (scl * dot) * dot), round(y / (scl * dot) * dot))
             for x, y in xys)
-    pa = xa, ya = next(xysr)
-    pb = xb, yb = next(xysr)
-    xc, yc = pb
+    a = next(xysr)
+    c = b = next(xysr)
     if closed:
-        it = itertools.chain(xysr, [pa, pb])
+        it = itertools.chain(xysr, [a, b])
     else:
-        yield pa
+        yield a
         it = xysr
-    p1 = p2 = None
+    α = β = None
     while True:
-        while (xc, yc) == (xb, yb):
+        while c == b:
             try:
-                xc, yc = next(it)
+                c = next(it)
             except StopIteration:
-                if p2 is not None:
-                    yield p2
-                if not closed and (xc, yc) != p2:
-                    yield xc, yc
+                if β is not None:
+                    yield β
+                if not closed and c != β:
+                    yield c
                 return
-        a = (xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)
-        if a != 0:
-            if (xb, yb) == p2:
-                xa, ya = p1
-                a = (xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)
-                if a != 0:
-                    if p2 is not None:
-                        yield p2
-                    p2 = xb, yb
+        if not collinear(a, b, c):
+            if b == β:
+                a = α
+                if not collinear(a, b, c):
+                    if β is not None:
+                        yield β
+                    β = b
                 else:
-                    p2 = None
+                    β = None
             else:
-                p1 = xa, ya
-                if p2 is not None:
-                    yield p2
-                p2 = xb, yb
-        xa, ya = xb, yb
-        xb, yb = xc, yc
+                α = a
+                if β is not None:
+                    yield β
+                β = b
+        a, b = b, c
 
 def geocentroid(region, bb=None, epsilon=None):
     # region is a list of polygons in geographic coordinates.
