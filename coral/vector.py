@@ -285,13 +285,13 @@ def animation(gifpath, frames, delay=10, size=600, margin=5):
     n = len(frames)
     length = len(str(n))
     with tempfile.TemporaryDirectory() as folder:
-        fmt = "{{:0{}}}.png".format(length)
+        fmt = os.path.join(folder, "{{:0{}}}.png".format(length))
         bb = reduce(lambda a, b: a | b, (c.bbox for c in frames), bbox.BBox())
         bb = bb.scale(1.05)
         paths = []
         for i, canvas in tqdm.tqdm(enumerate(frames), total=n, desc="anim"):
             canvas.bbox = bb
-            path = os.path.join(folder, fmt.format(i))
+            path = fmt.format(i)
             canvas.export(path, device="png48", size=size, margin=margin)
             paths.append(path)
         paths = " ".join(paths)
