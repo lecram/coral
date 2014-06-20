@@ -280,7 +280,7 @@ def export(pspath, output, device='png256'):
     cmd += "-sDEVICE={} -sOutputFile={} {}".format(device, output, pspath)
     return subprocess.call(cmd, shell=True)
 
-def animation(gifpath, frames, delay=10, size=600, margin=5):
+def animation(gifpath, frames, delay=10, *args, **kwargs):
     # frames is a list of Canvasses.
     n = len(frames)
     length = len(str(n))
@@ -292,7 +292,7 @@ def animation(gifpath, frames, delay=10, size=600, margin=5):
         for i, canvas in tqdm.tqdm(enumerate(frames), total=n, desc="anim"):
             canvas.bbox = bb
             path = fmt.format(i)
-            canvas.export(path, device="png48", size=size, margin=margin)
+            canvas.export(path, *args, **kwargs)
             paths.append(path)
         paths = " ".join(paths)
         cmd = "convert -delay {} -loop 0 {} {}".format(delay, paths, gifpath)
