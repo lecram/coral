@@ -21,13 +21,10 @@
 """
  A frame stores information that specify the relation between the Earth's
 geometry (geodesy) and a particular map geometry (usually in 2D). Each map has a
-frame over which multiple layers of entities are drawn. There are three main
-parameters that define a unique frame:
-* a scale factor;
+frame over which multiple layers of entities are drawn. There are two parameters
+that define a unique frame:
 * a projection;
 * a bounding box on the projected (plane) space.
-
-The scale factor here usually uses the meters/pixel unit.
 
  The projection parameter must be fully specified, including the center of the
 projection, the orientation of the projection and the Earth model used (sphere
@@ -45,10 +42,9 @@ from . import coord, bbox, tqdm
 
 class Frame:
 
-    __slots__ = 'scale', 'projection', 'bounding'
+    __slots__ = 'projection', 'bounding'
 
-    def __init__(self, scale, projection, bounding):
-        self.scale = scale
+    def __init__(self, projection, bounding):
         self.projection = projection
         self.bounding = bounding
 
@@ -69,7 +65,6 @@ class Frame:
         rlon, rlat = self.projection.lon0, self.projection.lat0
         lon, lat = math.degrees(rlon), math.degrees(rlat)
         d = {
-            "scale": self.scale,
             "projection": {
                 "type": type(self.projection).__name__,
                 "center": (lon, lat),
@@ -87,9 +82,9 @@ class Frame:
             json.dump(d, f, indent=4)
             f.write("\n")
 
-    def planify(self, points, closed=True):
+    def planify(self, scale, points, closed=True):
         points = [self.projection.geo2rect(lon, lat) for lon, lat in points]
-        points = coord.simplify(points, self.scale, closed=closed)
+        points = coord.simplify(points, scale, closed=closed)
         return points
 
     def cachenames(self, key, pff):
@@ -115,7 +110,6 @@ class Frame:
 def load(path):
     with open(path, "r") as f:
         d = json.load(f)
-    scl = d['scale']
     b = d['bounding']
     bb = bbox.BBox((b['x0'], b['y0']), (b['x1'], b['y1']))
     p = d['projection']
@@ -130,5 +124,5 @@ def load(path):
     else:
         r = m['r']
         proj = Proj(c, r)
-    frame = Frame(scl, proj, bb)
+    frame = Frame(proj, bb)
     return frame
