@@ -332,6 +332,49 @@ class AzimuthalEquidistant(Proj):
     def scale(self, lon, lat):
         raise NotImplemented("scale is not implemented for Azimuthal Equidistant")
 
+class AzimuthalEqualArea(Proj):
+    "Lambert Azimuthal Equal-Area Projection for the Spherical Earth."
+
+    def __init__(self, *args, **kwargs):
+        Proj.__init__(self, *args, **kwargs)
+        self.coslat0 = math.cos(self.lat0)
+        self.sinlat0 = math.sin(self.lat0)
+
+    def geo2rect(self, lon, lat):
+        lon, lat = math.radians(lon), math.radians(lat)
+        coslat = math.cos(lat)
+        sinlat = math.sin(lat)
+        coslon = math.cos(lon - self.lon0)
+        sinlon = math.sin(lon - self.lon0)
+        k = math.sqrt(2 / (1 + self.sinlat0 * sinlat + self.coslat0 * coslat * coslon))
+        x = y = self.r * k
+        x *= coslat * sinlon
+        y *= self.coslat0 * sinlat - self.sinlat0 * coslat * coslon
+        return x, y
+
+    def rect2geo(self, x, y):
+        p = math.sqrt(x*x + y*y)
+        c = 2 * math.asin(p / (2 * self.r))
+        cosc = math.cos(c)
+        sinc = math.sin(c)
+        # FIXME: In the formulas below, should it be atan or atan2?
+        if self.lat0 == math.pi / 2:
+            # North Polar Aspect.
+            lon = self.lon0 + math.atan(x/(-y))
+        elif self.lat0 == -math.pi / 2:
+            # South Polar Aspect.
+            lon = self.lon0 + math.atan(x/y)
+        else:
+            # Any other Oblique Aspect.
+            den = p * self.coslat0 * cosc - y * self.sinlat0 * sinc
+            lon = self.lon0 + math.atan(x * sinc / den)
+        lat = math.asin(cosc * self.sinlat0 + y * sinc * self.coslat0 / p)
+        lon, lat = math.degrees(lon), math.degrees(lat)
+        return lon, lat
+
+    def scale(self, lon, lat):
+        raise NotImplemented("scale is not implemented for Azimuthal Equal-Area")
+
 if __name__ == "__main__":
     p = 0
     for proj in Mercator(), EMercator(), TransMercator():
