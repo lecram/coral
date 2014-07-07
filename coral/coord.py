@@ -30,6 +30,91 @@ import itertools
 
 from . import bbox
 
+class Buffer:
+
+    def __init__(self, n):
+        assert n & (n - 1) == 0 # n must be a power of two.
+        self.n = n
+        self.buf = [None] * n
+        self.s = self.e = 0
+        self._m1 = n - 1
+        self._m2 = (n << 1) - 1
+
+    def __str__(self):
+        if self.isempty():
+            return "<>"
+        else:
+            i = self.s
+            end = self.e
+            seq = []
+            while i != end:
+                seq.append(self.buf[i & self._m1])
+                i = self._inc(i)
+            return "<{}>".format(" ".join(seq))
+
+    def _inc(self, i):
+        return (i + 1) & self._m2
+
+    def _dec(self, i):
+        return (i - 1) & self._m2
+
+    def isempty(self):
+        return self.e == self.s
+
+    def isfull(self):
+        return self.e == self.s ^ self.n
+
+    def push(self, o):
+        assert not self.isfull()
+        self.buf[self.e & self._m1] = o
+        self.e = self._inc(self.e)
+
+    def pop(self):
+        assert not self.isempty()
+        self.e = self._dec(self.e)
+        o = self.buf[self.e & self._m1]
+        return o
+
+    def peek(self):
+        assert not self.isempty()
+        o = self.buf[self._dec(self.e) & self._m1]
+        return o
+
+    def shift(self):
+        assert not self.isempty()
+        o = self.buf[self.s & self._m1]
+        self.s = self._inc(self.s)
+        return o
+
+def _test_buffer():
+    print("Running tests...")
+    N = 4
+    assert N > 2
+    b = Buffer(N)
+    assert b.isempty()
+    assert not b.isfull()
+    b.push(5)
+    b.push(7)
+    assert not b.isempty()
+    assert not b.isfull()
+    assert b.pop() == 7
+    b.push(11)
+    assert b.shift() == 5
+    assert b.shift() == 11
+    for i in range(23):
+        if b.isfull():
+            b.shift()
+        b.push(i)
+    assert not b.isempty()
+    assert b.isfull()
+    assert b.pop() == 22
+    assert b.shift() == 19
+    assert b.shift() == 20
+    assert b.pop() == 21
+    assert b.isempty()
+    assert not b.isfull()
+    print("OK")
+
 def corangle(a):
     "Correct angle such that `-pi <= a <= pi`."
     while a < -math.pi:
@@ -147,42 +232,72 @@ def collinear(a, b, c):
     cln = (xa - xc) * (yb - ya) == (xa - xb) * (yc - ya)
     return cln
 
-def simplify(xys, scl, dot=1, closed=True):
-    xysr = ((round(x / (scl * dot) * dot), round(y / (scl * dot) * dot))
-            for x, y in xys)
-    a = next(xysr)
-    c = b = next(xysr)
-    if closed:
-        it = itertools.chain(xysr, [a, b])
-    else:
-        yield a
-        it = xysr
-    α = β = None
-    while True:
-        while c == b:
-            try:
-                c = next(it)
-            except StopIteration:
-                if β is not None:
-                    yield β
-                if not closed and c != β:
-                    yield c
-                return
-        if not collinear(a, b, c):
-            if b == β:
-                a = α
-                if not collinear(a, b, c):
-                    if β is not None:
-                        yield β
-                    β = b
-                else:
-                    β = None
+def sqr_fit(s, m):
+    for x, y in s:
+        x = round(x / m)
+        y = round(y / m)
+        yield (x, y)
+
+def open_no_slit(s, k):
+    b = Buffer(k)
+    p = next(s)
+    yield p
+    q = next(s)
+    for r in s:
+        if r == q:
+            continue
+        if not collinear(p, q, r):
+            if not b.isempty() and q == b.peek():
+                b.pop()
             else:
-                α = a
-                if β is not None:
-                    yield β
-                β = b
-        a, b = b, c
+                if b.isfull():
+                    yield b.shift()
+                b.push(q)
+        p, q = q, r
+    while not b.isempty():
+        yield b.shift()
+    yield q
+
+def closed_no_slit(s, k):
+    b1 = Buffer(k)
+    b2 = Buffer(k)
+    p = next(s)
+    yield p
+    q = next(s)
+    for r in s:
+        if r == q:
+            continue
+        if not collinear(p, q, r):
+            if not b1.isempty() and q == b1.peek():
+                b1.pop()
+            else:
+                if b1.isfull():
+                    t = b1.shift()
+                    if b2.isfull():
+                        yield t
+                    else:
+                        b2.push(t)
+                b1.push(q)
+        p, q = q, r
+    while not b1.isempty():
+        p = b1.pop()
+        q = b2.shift()
+        if p != q:
+            break
+    while not b1.isempty():
+        yield b1.shift()
+    yield p
+    yield q
+    while not b2.isempty():
+        yield b2.shift()
+    yield r
+
+def simplify(xys, scl, closed=False, k=8):
+    s = sqr_fit(xys, scl)
+    if closed:
+        return closed_no_slit(s, k)
+    else:
+        return open_no_slit(s, k)
 
 def geocentroid(region, bb=None, epsilon=None):
     # region is a list of polygons in geographic coordinates.
