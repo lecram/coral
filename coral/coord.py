@@ -184,23 +184,6 @@ def simplify(xys, scl, dot=1, closed=True):
                 β = b
         a, b = b, c
 
-def rdp(points, epsilon):
-    dmax = 0
-    (xa, ya), *ps, (xc, yc) = points
-    h = math.hypot(xc - xa, yc - ya)
-    for i, (xb, yb) in enumerate(ps):
-        d = abs((xa - xc) * (yb - ya) - (xa - xb) * (yc - ya)) / h
-        if d > dmax:
-            idx = i
-            dmax = d
-    if dmax > epsilon:
-        ps1 = rdp(points[:idx+1], epsilon)
-        ps2 = rdp(points[idx:], epsilon)
-        ps = ps1 + ps2[1:]
-    else:
-        ps = [(xa, ya), (xc, yc)]
-    return ps
-
 def geocentroid(region, bb=None, epsilon=None):
     # region is a list of polygons in geographic coordinates.
     if bb is None:
