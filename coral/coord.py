@@ -120,7 +120,7 @@ def _test_buffer():
 #http://en.wikipedia.org/wiki/Earth_radius#Geocentric_radius
 def radiusat(lat, ellipsoid=None):
     if ellipsoid is None:
-        ellipsoid = WGS84
+        ellipsoid = proj.WGS84
     a, b = ellipsoid.a, ellipsoid.b
     radlat = math.radians(lat)
     coslat = math.cos(radlat)
