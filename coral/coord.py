@@ -317,7 +317,7 @@ def closed_no_slit(s, k):
                         b2.push(t)
                 b1.push(q)
         p, q = q, r
-    while not b1.isempty():
+    while not (b1.isempty() or b2.isempty()):
         p = b1.pop()
         q = b2.shift()
         if p != q:
