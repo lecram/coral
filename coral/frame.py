@@ -83,7 +83,7 @@ class Frame:
             f.write("\n")
 
     def planify(self, scale, points, closed=True):
-        points = [self.projection.geo2rect(lon, lat) for lon, lat in points]
+        points = (self.projection.geo2rect(lon, lat) for lon, lat in points)
         points = coord.simplify(points, scale, closed=closed)
         return points
 
