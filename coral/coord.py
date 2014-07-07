@@ -213,8 +213,7 @@ def geocentroid(region, bb=None, epsilon=None):
         epsilon = 1e-10
     c0 = bb.center()
     while True:
-        # Should probably use Lambert Azimuthal equal-area instead.
-        prj = proj.Stereographic(c0)
+        prj = proj.AzimuthalEqualArea(c0)
         cw = []
         for poly in region:
             xys = [prj.geo2rect(lon, lat) for lon, lat in poly]
