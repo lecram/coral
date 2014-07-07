@@ -28,7 +28,9 @@ Spherical Geometry and Polyline simplification.
 import math
 import itertools
 
-from . import bbox
+from . import bbox, proj
+
+corangle = proj.corangle
 
 class Buffer:
 
@@ -114,14 +116,6 @@ def _test_buffer():
     assert b.isempty()
     assert not b.isfull()
     print("OK")
-
-def corangle(a):
-    "Correct angle such that `-pi <= a <= pi`."
-    while a < -math.pi:
-        a += 2 * math.pi
-    while a > math.pi:
-        a -= 2 * math.pi
-    return a
 
 #http://en.wikipedia.org/wiki/Earth_radius#Geocentric_radius
 def radiusat(lat, ellipsoid=None):
@@ -220,10 +214,10 @@ def geocentroid(region, bb=None, epsilon=None):
     c0 = bb.center()
     while True:
         # Should probably use Lambert Azimuthal equal-area instead.
-        proj = Stereographic(c0)
+        prj = proj.Stereographic(c0)
         cw = []
         for poly in region:
-            xys = [proj.geo2rect(lon, lat) for lon, lat in poly]
+            xys = [prj.geo2rect(lon, lat) for lon, lat in poly]
             # http://en.wikipedia.org/wiki/Centroid#Centroid_of_polygon
             cx = cy = sa = 0
             for (x0, y0), (x1, y1) in zip(xys, xys[1:] + xys[:1]):
@@ -242,7 +236,7 @@ def geocentroid(region, bb=None, epsilon=None):
             sw += w
         cx /= sw
         cy /= sw
-        c1 = proj.rect2geo(cx, cy)
+        c1 = prj.rect2geo(cx, cy)
         if abs(c1[0] - c0[0]) <= epsilon and abs(c1[1] - c0[1]) <= epsilon:
             break
         c0 = c1

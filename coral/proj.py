@@ -25,9 +25,13 @@ Map projections.
 import math
 import collections
 
-from . import coord
-
-corangle = coord.corangle
+def corangle(a):
+    "Correct angle such that `-pi <= a <= pi`."
+    while a < -math.pi:
+        a += 2 * math.pi
+    while a > math.pi:
+        a -= 2 * math.pi
+    return a
 
 class ProjectionError(Exception): pass
 
