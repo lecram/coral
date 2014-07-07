@@ -38,7 +38,7 @@ but without scale, i.e. with meters as unit.
 import math
 import json
 
-from . import coord, bbox, tqdm
+from . import coord, proj, bbox, tqdm
 
 class Frame:
 
@@ -49,7 +49,7 @@ class Frame:
         self.bounding = bounding
 
     def save(self, path):
-        if issubclass(type(self.projection), coord.EProj):
+        if issubclass(type(self.projection), proj.EProj):
             model = {
                 "type": "ellipsoid",
                 "a": self.projection.a,
@@ -113,16 +113,16 @@ def load(path):
     b = d['bounding']
     bb = bbox.BBox((b['x0'], b['y0']), (b['x1'], b['y1']))
     p = d['projection']
-    Proj = getattr(coord, p['type'])
+    Proj = getattr(proj, p['type'])
     pt = p['type']
     c = p['center']
     m = p['model']
     mt = m['type']
     if mt == 'ellipsoid':
         e = Ellipsoid(*(m[k] for k in 'abef'))
-        proj = Proj(c, e)
+        prj = Proj(c, e)
     else:
         r = m['r']
-        proj = Proj(c, r)
-    frame = Frame(proj, bb)
+        prj = Proj(c, r)
+    frame = Frame(prj, bb)
     return frame
