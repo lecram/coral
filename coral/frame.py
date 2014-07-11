@@ -82,6 +82,13 @@ class Frame:
             json.dump(d, f, indent=4)
             f.write("\n")
 
+    def point(self, scale, point):
+        lon, lat = point
+        x, y = self.projection.geo2rect(lon, lat)
+        x //= scale
+        y //= scale
+        return x, y
+
     def planify(self, scale, points, closed=True):
         points = (self.projection.geo2rect(lon, lat) for lon, lat in points)
         points = coord.simplify(points, scale, closed=closed)
