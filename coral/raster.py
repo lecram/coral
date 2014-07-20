@@ -79,10 +79,7 @@ class BaseCanvas:
     def strokepolygon(self, points, color):
         "Draw polygon perimeter using Bresenham's line algorithm."
 
-        maxd = min(self.width, self.height) / 2
         for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]):
-            if math.hypot(x1 - x0, y1 - y0) > maxd:
-                continue
             dx = abs(x1 - x0)
             dy = abs(y1 - y0)
             sx = x0 < x1 and 1 or -1
