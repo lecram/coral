@@ -28,27 +28,15 @@ from array import array
 
 from . import png
 
-def _bits2bytes(bits):
-    i = byte = 0
-    for bit in bits:
-        byte |= bit
-        i += 1
-        if i == 8:
-            yield byte
-            i = byte = 0
-        else:
-            byte <<= 1
-    if i:
-        yield byte << (8 - i)
-
 class BWCanvas:
 
     def __init__(self, width, height, bgcolor=0):
         self.width   = width
         self.height  = height
         self.bgcolor = bgcolor
-        n = width * height
-        self.data = array('B', _bits2bytes(bgcolor for i in range(n)))
+        nw = math.ceil(width/8)
+        n = nw * height
+        self.data = array('B', (bgcolor for i in range(n)))
 
     def __getitem__(self, key):
         x, y = key
