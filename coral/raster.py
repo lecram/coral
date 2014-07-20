@@ -28,7 +28,88 @@ from array import array
 
 from . import png
 
-class BWCanvas:
+class BaseCanvas:
+
+    def scanpolygon(self, points, scans=None):
+        """Create perimeter marks for scanlines, used to fill polygons.
+        This can be called for multiple polygons, passing intermediate
+         values as the `scans` parameter.
+        """
+
+        if scans is None:
+            scans = [[] for i in range(self.height)]
+        for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]):
+            if y0 == y1:
+                # horizontal segments do not trigger the scan.
+                continue
+            down = y0 < y1
+            if not down:
+                # consider all segments going downwards to align triggers.
+                (x0, y0), (x1, y1) = (x1, y1), (x0, y0)
+            if y1 - y0 > self.height / 2:
+                # ToDo:
+                #  -split segment in two parts, top and bottom, and handle them.
+                continue
+            if abs(x1 - x0) > self.width / 2:
+                continue
+            if x0 == x1:
+                while y0 < y1:
+                    heapq.heappush(scans[y0], (x0, down))
+                    y0 += 1
+            else:
+                sx = x0 < x1 and 1 or -1
+                slope = abs((y1 - y0) / (x1 - x0))
+                while y0 < y1:
+                    heapq.heappush(scans[y0], (round(x0), down))
+                    y0 += 1
+                    x0 += sx / slope
+        return scans
+
+    def fillpolygons(self, scans, color):
+        "Fill polygons previously scanned with `scanpolygon()`."
+
+        for y, marks in enumerate(scans):
+            heapq.heappush(marks, (self.width, False))
+            x1, d1 = heapq.heappop(marks)
+            x0, d0 = 0, not d1
+            while x1 < self.width:
+                if d0:
+                    while x0 < x1:
+                        self[x0, y] = color
+                        x0 += 1
+                else:
+                    x0 = x1
+                d0 = d1
+                x1, d1 = heapq.heappop(marks)
+
+    def strokepolygon(self, points, color):
+        "Draw polygon perimeter using Bresenham's line algorithm."
+
+        maxd = min(self.width, self.height) / 2
+        for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]):
+            if math.hypot(x1 - x0, y1 - y0) > maxd:
+                continue
+            dx = abs(x1 - x0)
+            dy = abs(y1 - y0)
+            sx = x0 < x1 and 1 or -1
+            sy = y0 < y1 and 1 or -1
+            err = dx - dy
+            while True:
+                self[x0, y0] = color
+                if (x0, y0) == (x1, y1):
+                    break
+                e2 = 2 * err
+                if e2 > -dy:
+                    err -= dy
+                    x0 += sx
+                if (x0, y0) == (x1, y1):
+                    self[x0, y0] = color
+                    break
+                if e2 < dx:
+                    err += dx
+                    y0 += sy
+
+class BWCanvas(BaseCanvas):
 
     def __init__(self, width, height, bgcolor=0):
         self.width   = width
@@ -62,7 +143,7 @@ class BWCanvas:
             f.write("{0.width} {0.height}\n".format(self).encode("ascii"))
             self.data.tofile(f)
 
-class GrayCanvas:
+class GrayCanvas(BaseCanvas):
 
     def __init__(self, width, height, bgcolor=255):
         self.width   = width
@@ -92,7 +173,7 @@ def _fill(color, n):
     for i in range(n):
         yield from color
 
-class ColorCanvas:
+class ColorCanvas(BaseCanvas):
 
     def __init__(self, width, height, bgcolor=(255, 255, 255)):
         self.width   = width
@@ -147,85 +228,6 @@ class PixMap:
         else:
             polys = [poly]
         return polys
-
-    def scanpolygon(self, points, scans=None):
-        """Create perimeter marks for scanlines, used to fill polygons.
-        This can be called for multiple polygons, passing intermediate
-         values as the `scans` parameter.
-        """
-
-        if scans is None:
-            scans = [[] for i in range(self.height)]
-        for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]):
-            if y0 == y1:
-                # horizontal segments do not trigger the scan.
-                continue
-            down = y0 < y1
-            if not down:
-                # consider all segments going downwards to align triggers.
-                (x0, y0), (x1, y1) = (x1, y1), (x0, y0)
-            if y1 - y0 > self.height / 2:
-                # ToDo:
-                #  -split segment in two parts, top and bottom, and handle them.
-                continue
-            if abs(x1 - x0) > self.width / 2:
-                continue
-            if x0 == x1:
-                while y0 < y1:
-                    heapq.heappush(scans[y0], (x0, down))
-                    y0 += 1
-            else:
-                sx = x0 < x1 and 1 or -1
-                slope = abs((y1 - y0) / (x1 - x0))
-                while y0 < y1:
-                    heapq.heappush(scans[y0], (round(x0), down))
-                    y0 += 1
-                    x0 += sx / slope
-        return scans
-
-    def fillpolygons(self, scans, color):
-        "Fill polygons previously scanned with `scanpolygon()`."
-
-        for y, marks in enumerate(scans):
-            heapq.heappush(marks, (self.width, False))
-            x1, d1 = heapq.heappop(marks)
-            x0, d0 = 0, not d1
-            while x1 < self.width:
-                if d0:
-                    while x0 < x1:
-                        self.pixmap[y][x0] = color
-                        x0 += 1
-                else:
-                    x0 = x1
-                d0 = d1
-                x1, d1 = heapq.heappop(marks)
-
-    def strokepolygon(self, points, color):
-        "Draw polygon perimeter using Bresenham's line algorithm."
-
-        maxd = min(self.width, self.height) / 2
-        for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]):
-            if math.hypot(x1 - x0, y1 - y0) > maxd:
-                continue
-            dx = abs(x1 - x0)
-            dy = abs(y1 - y0)
-            sx = x0 < x1 and 1 or -1
-            sy = y0 < y1 and 1 or -1
-            err = dx - dy
-            while True:
-                self.pixmap[y0][x0] = color
-                if (x0, y0) == (x1, y1):
-                    break
-                e2 = 2 * err
-                if e2 > -dy:
-                    err -= dy
-                    x0 += sx
-                if (x0, y0) == (x1, y1):
-                    self.pixmap[y0][x0] = color
-                    break
-                if e2 < dx:
-                    err += dx
-                    y0 += sy
 
     def drawpredicate(self, func, color):
         "Draw pixels for which `func(x, y)` returns True."
