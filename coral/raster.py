@@ -46,12 +46,6 @@ class BaseCanvas:
             if not down:
                 # consider all segments going downwards to align triggers.
                 (x0, y0), (x1, y1) = (x1, y1), (x0, y0)
-            if y1 - y0 > self.height / 2:
-                # ToDo:
-                #  -split segment in two parts, top and bottom, and handle them.
-                continue
-            if abs(x1 - x0) > self.width / 2:
-                continue
             if x0 == x1:
                 while y0 < y1:
                     heapq.heappush(scans[y0], (x0, down))
