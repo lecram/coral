@@ -24,8 +24,112 @@ Tools for raster drawings.
 
 import math
 import heapq
+from array import array
 
-import png
+from . import png
+
+def _bits2bytes(bits):
+    i = byte = 0
+    for bit in bits:
+        byte |= bit
+        i += 1
+        if i == 8:
+            yield byte
+            i = byte = 0
+        else:
+            byte <<= 1
+    if i:
+        yield byte << (8 - i)
+
+class BWCanvas:
+
+    def __init__(self, width, height, bgcolor=0):
+        self.width   = width
+        self.height  = height
+        self.bgcolor = bgcolor
+        n = width * height
+        self.data = array('B', _bits2bytes(bgcolor for i in range(n)))
+
+    def __getitem__(self, key):
+        x, y = key
+        i = y * self.width + x
+        i, j = divmod(i, 8)
+        mask = 1 << (7 - j)
+        v = int(bool(self.data[i] & mask))
+        return v
+
+    def __setitem__(self, key, value):
+        x, y = key
+        i = y * self.width + x
+        i, j = divmod(i, 8)
+        mask = 1 << (7 - j)
+        if value:
+            self.data[i] |= mask
+        else:
+            self.data[i] &= ~mask
+
+    def save(self, fname):
+        with open(fname, "bw") as f:
+            f.write(b"P4\n")
+            f.write("{0.width} {0.height}\n".format(self).encode("ascii"))
+            self.data.tofile(f)
+
+class GrayCanvas:
+
+    def __init__(self, width, height, bgcolor=255):
+        self.width   = width
+        self.height  = height
+        self.bgcolor = bgcolor
+        n = width * height
+        self.data = array('B', (bgcolor for i in range(n)))
+
+    def __getitem__(self, key):
+        x, y = key
+        i = y * self.width + x
+        return self.data[i]
+
+    def __setitem__(self, key, value):
+        x, y = key
+        i = y * self.width + x
+        self.data[i] = value
+
+    def save(self, fname):
+        with open(fname, "bw") as f:
+            f.write(b"P5\n")
+            f.write("{0.width} {0.height}\n".format(self).encode("ascii"))
+            f.write(b"255\n")
+            self.data.tofile(f)
+
+def _fill(color, n):
+    for i in range(n):
+        yield from color
+
+class ColorCanvas:
+
+    def __init__(self, width, height, bgcolor=(255, 255, 255)):
+        self.width   = width
+        self.height  = height
+        self.bgcolor = bgcolor
+        n = width * height
+        self.data = array('B', _fill(bgcolor, n))
+
+    def __getitem__(self, key):
+        x, y = key
+        i = 3 * (y * self.width + x)
+        r, g, b = self.data[i:i+3]
+        return r, g, b
+
+    def __setitem__(self, key, value):
+        x, y = key
+        i = 3 * (y * self.width + x)
+        self.data[i:i+3] = array('B', value)
+
+    def save(self, fname):
+        with open(fname, "bw") as f:
+            f.write(b"P6\n")
+            f.write("{0.width} {0.height}\n".format(self).encode("ascii"))
+            f.write(b"255\n")
+            self.data.tofile(f)
 
 class PixMap:
 
