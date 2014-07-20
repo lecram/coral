@@ -67,7 +67,7 @@ class BaseCanvas:
             x1, d1 = heapq.heappop(marks)
             x0, d0 = 0, not d1
             while x1 < self.width:
-                if d0:
+                if not d0:
                     while x0 < x1:
                         self[x0, y] = color
                         x0 += 1
