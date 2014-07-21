@@ -218,10 +218,10 @@ class GrayCanvas(BaseCanvas):
     def __setitem__(self, key, value):
         x, y = key
         i = y * self.width + x
-        if isinstance(value, tuple): # (V, A)
+        if isinstance(value, tuple): # (V, A).
             fg, a = value
             v = self.blend(self.data[i], fg, a)
-        else: # Must be V
+        else: # Must be V.
             v = value
         self.data[i] = v
 
@@ -259,10 +259,10 @@ class ColorCanvas(BaseCanvas):
     def __setitem__(self, key, value):
         x, y = key
         i = 3 * (y * self.width + x)
-        if len(value) == 4: # (R, G, B, A)
+        if len(value) == 4: # (R, G, B, A).
             *fg, a = value
             color = self.blend(self.data[i:i+3], fg, a)
-        else: # Must be (R, G, B)
+        else: # Must be (R, G, B).
             color = value
         self.data[i:i+3] = array('B', color)
 
