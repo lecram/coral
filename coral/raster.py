@@ -160,14 +160,16 @@ class BaseCanvas:
                 self[x, ipart(intery)+1] = color + (alpha2,)
             intery += gradient
 
-    def strokepolygon(self, points, color, aa=True):
+    def strokepolygon(self, points, color, aa=None):
         "Draw polygon perimeter using Bresenham's line algorithm."
 
+        if aa is None: aa = self.aa
         line = self.aaline if aa else self.line
         for start, end in zip(points, points[1:] + points[:1]):
             line(start, end, color)
 
 class BWCanvas(BaseCanvas):
+    aa = False
 
     def __init__(self, width, height, bgcolor=0):
         self.width   = width
@@ -202,6 +204,7 @@ class BWCanvas(BaseCanvas):
             self.data.tofile(f)
 
 class GrayCanvas(BaseCanvas):
+    aa = True
 
     def __init__(self, width, height, bgcolor=255):
         self.width   = width
@@ -242,6 +245,7 @@ def _fill(color, n):
         yield from color
 
 class ColorCanvas(BaseCanvas):
+    aa = True
 
     def __init__(self, width, height, bgcolor=(255, 255, 255)):
         self.width   = width
