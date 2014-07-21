@@ -74,29 +74,36 @@ class BaseCanvas:
                 d0 = d1
                 x1, d1 = heapq.heappop(marks)
 
+    def line(self, start, end, color):
+        "Draw line using Bresenham's algorithm."
+
+        x0, y0 = start
+        x1, y1 = end
+        dx = abs(x1 - x0)
+        dy = abs(y1 - y0)
+        sx = x0 < x1 and 1 or -1
+        sy = y0 < y1 and 1 or -1
+        err = dx - dy
+        while True:
+            self[x0, y0] = color
+            if (x0, y0) == (x1, y1):
+                break
+            e2 = 2 * err
+            if e2 > -dy:
+                err -= dy
+                x0 += sx
+            if (x0, y0) == (x1, y1):
+                self[x0, y0] = color
+                break
+            if e2 < dx:
+                err += dx
+                y0 += sy
+
     def strokepolygon(self, points, color):
         "Draw polygon perimeter using Bresenham's line algorithm."
 
-        for (x0, y0), (x1, y1) in zip(points, points[1:] + points[:1]):
-            dx = abs(x1 - x0)
-            dy = abs(y1 - y0)
-            sx = x0 < x1 and 1 or -1
-            sy = y0 < y1 and 1 or -1
-            err = dx - dy
-            while True:
-                self[x0, y0] = color
-                if (x0, y0) == (x1, y1):
-                    break
-                e2 = 2 * err
-                if e2 > -dy:
-                    err -= dy
-                    x0 += sx
-                if (x0, y0) == (x1, y1):
-                    self[x0, y0] = color
-                    break
-                if e2 < dx:
-                    err += dx
-                    y0 += sy
+        for start, end in zip(points, points[1:] + points[:1]):
+            self.line(start, end, color)
 
 class BWCanvas(BaseCanvas):
 
