@@ -99,11 +99,73 @@ class BaseCanvas:
                 err += dx
                 y0 += sy
 
-    def strokepolygon(self, points, color):
+    def aaline(self, start, end, color):
+        "Draw anti-aliased line using Xiaolin Wu's algorithm."
+
+        ipart   = int
+        fpart   = lambda x: math.modf(x)[0]
+        rfpart  = lambda x: 1 - math.modf(x)[0]
+        nearest = lambda x: int(x + 0.5) # This is *not* the same as round().
+        x0, y0 = start
+        x1, y1 = end
+        steep = abs(y1 - y0) > abs(x1 - x0)
+        if steep:
+            (x0, y0), (x1, y1) = (y0, x0), (y1, x1)
+        if x0 > x1:
+            (x0, y0), (x1, y1) = (x1, y1), (x0, y0)
+        dx = x1 - x0
+        dy = y1 - y0
+        gradient = dy / dx
+
+        # Line start.
+        xend = nearest(x0)
+        yend = y0 + gradient * (xend - x0)
+        xgap = rfpart(x0 + 0.5)
+        xpxl1 = xend
+        ypxl1 = ipart(yend)
+        alpha1 = rfpart(yend) * xgap
+        alpha2 =  fpart(yend) * xgap
+        if steep:
+            self[ypxl1  , xpxl1] = color + (alpha1,)
+            self[ypxl1+1, xpxl1] = color + (alpha2,)
+        else:
+            self[xpxl1, ypxl1  ] = color + (alpha1,)
+            self[xpxl1, ypxl1+1] = color + (alpha2,)
+        intery = yend + gradient
+
+        # Line end.
+        xend = nearest(x1)
+        yend = y1 + gradient * (xend - x1)
+        xgap = rfpart(x1 + 0.5)
+        xpxl2 = xend
+        ypxl2 = ipart(yend)
+        alpha1 = rfpart(yend) * xgap
+        alpha2 =  fpart(yend) * xgap
+        if steep:
+            self[ypxl2  , xpxl2] = color + (alpha1,)
+            self[ypxl2+1, xpxl2] = color + (alpha2,)
+        else:
+            self[xpxl2, ypxl2  ] = color + (alpha1,)
+            self[xpxl2, ypxl2+1] = color + (alpha2,)
+
+        # Internal points.
+        for x in range(xpxl1+1, xpxl2):
+            alpha1 = rfpart(intery)
+            alpha2 =  fpart(intery)
+            if steep:
+                self[ipart(intery)  , x] = color + (alpha1,)
+                self[ipart(intery)+1, x] = color + (alpha2,)
+            else:
+                self[x, ipart(intery)  ] = color + (alpha1,)
+                self[x, ipart(intery)+1] = color + (alpha2,)
+            intery += gradient
+
+    def strokepolygon(self, points, color, aa=True):
         "Draw polygon perimeter using Bresenham's line algorithm."
 
+        line = self.aaline if aa else self.line
         for start, end in zip(points, points[1:] + points[:1]):
-            self.line(start, end, color)
+            line(start, end, color)
 
 class BWCanvas(BaseCanvas):
 
@@ -187,7 +249,21 @@ class ColorCanvas(BaseCanvas):
     def __setitem__(self, key, value):
         x, y = key
         i = 3 * (y * self.width + x)
-        self.data[i:i+3] = array('B', value)
+        if len(value) == 4: # (R, G, B, A)
+            *fg, a = value
+            color = self.blend(self.data[i:i+3], fg, a)
+        else: # Must be (R, G, B)
+            color = value
+        self.data[i:i+3] = array('B', color)
+
+    def blend(self, bg, fg, alpha):
+        r0, g0, b0 = bg
+        r1, g1, b1 = fg
+        beta = 1 - alpha
+        r = int(r0 * beta + r1 * alpha + 0.5)
+        g = int(g0 * beta + g1 * alpha + 0.5)
+        b = int(b0 * beta + b1 * alpha + 0.5)
+        return r, g, b
 
     def save(self, fname):
         with open(fname, "bw") as f:
