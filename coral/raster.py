@@ -218,7 +218,17 @@ class GrayCanvas(BaseCanvas):
     def __setitem__(self, key, value):
         x, y = key
         i = y * self.width + x
-        self.data[i] = value
+        if isinstance(value, tuple): # (V, A)
+            fg, a = value
+            v = self.blend(self.data[i], fg, a)
+        else: # Must be V
+            v = value
+        self.data[i] = v
+
+    def blend(self, bg, fg, alpha):
+        beta = 1 - alpha
+        v = int(bg * beta + fg * alpha + 0.5)
+        return v
 
     def save(self, fname):
         with open(fname, "bw") as f:
