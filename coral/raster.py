@@ -175,13 +175,14 @@ class BWCanvas(BaseCanvas):
         self.width   = width
         self.height  = height
         self.bgcolor = bgcolor
-        nw = math.ceil(width/8)
+        nw = math.ceil(width/8) # bytes/row
         n = nw * height
         self.data = array('B', (bgcolor for i in range(n)))
+        self.bits_per_row = nw * 8
 
     def __getitem__(self, key):
         x, y = key
-        i = y * self.width + x
+        i = y * self.bits_per_row + x
         i, j = divmod(i, 8)
         mask = 1 << (7 - j)
         v = int(bool(self.data[i] & mask))
@@ -189,7 +190,7 @@ class BWCanvas(BaseCanvas):
 
     def __setitem__(self, key, value):
         x, y = key
-        i = y * self.width + x
+        i = y * self.bits_per_row + x
         i, j = divmod(i, 8)
         mask = 1 << (7 - j)
         if value:
