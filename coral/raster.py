@@ -26,6 +26,9 @@ import math
 import heapq
 from array import array
 
+# Old-style rounding.
+nearest = lambda x: int(x + math.copysign(0.5, x))
+
 class BaseCanvas:
 
     def scanpolygon(self, points, scans=None):
@@ -105,7 +108,6 @@ class BaseCanvas:
         ipart   = int
         fpart   = lambda x: math.modf(x)[0]
         rfpart  = lambda x: 1 - math.modf(x)[0]
-        nearest = lambda x: int(x + 0.5) # This is *not* the same as round().
         x0, y0 = start
         x1, y1 = end
         steep = abs(y1 - y0) > abs(x1 - x0)

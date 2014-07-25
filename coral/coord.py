@@ -32,6 +32,9 @@ from . import bbox, proj
 
 corangle = proj.corangle
 
+# Old-style rounding.
+nearest = lambda x: int(x + math.copysign(0.5, x))
+
 class Buffer:
 
     def __init__(self, n):
@@ -250,7 +253,7 @@ def bearing2cardinal(b):
     ]
     b = (b + 360) % 360
     index = 2 * b / 45
-    return cardinals[round(index) % 16]
+    return cardinals[nearest(index) % 16]
 
 def bearing2hours(b):
     b = (b + 360) % 360
@@ -265,8 +268,8 @@ def collinear(a, b, c):
 
 def sqr_fit(s, m):
     for x, y in s:
-        x = round(x / m)
-        y = round(y / m)
+        x = nearest(x / m)
+        y = nearest(y / m)
         yield (x, y)
 
 def open_no_slit(s, k):
