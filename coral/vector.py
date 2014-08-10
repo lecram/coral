@@ -19,6 +19,7 @@
 # THE SOFTWARE.
 
 import os
+import inspect
 import subprocess
 import tempfile
 from functools import reduce
@@ -52,21 +53,25 @@ COMMONDEF = """
 /cp {closepath} bd
 """
 
-CESHOWDEF = """
-/ceshow { % (string) fontsize fontname x y
-    gs
-        m findfont exch scalefont setfont % s
-        gs
-            dup false charpath flattenpath pathbbox % s x0 y0 x1 y1
-        gr
-        3 -1 roll sub % s x0 x1 dy
-        3 1 roll sub % s dy -dx
-        2 div exch % s -dx/2 dy
-        -2 div % s -dx/2 -dy/2
-        rm show
-    gr
-} bd
-"""
+def read_defs(path):
+    with open(path, "r") as f:
+        # The ordering of the keys is important, hence the additional list.
+        keys = []
+        defs = {}
+        src = ""
+        for line in f:
+            if line.rstrip():
+                src += line
+            else:
+                key = src[1:src.index(' ')]
+                keys.append(key)
+                defs[key] = src
+                src = ""
+    return keys, defs
+
+base = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+KEYS, DEFS = read_defs(os.path.join(base, "defs.ps"))
+DEPS = {k: set(["sz"]) for k in "sc st str sr sbr sb sbl sl stl".split()}
 
 class Canvas:
 
@@ -74,14 +79,14 @@ class Canvas:
         self.lines = []
         self.bbox = bbox.BBox()
         self.state = PSDEFAULTS.copy()
-        self.CESHOW = False
+        self.deps = set()
 
     def copy(self):
         canvas = Canvas()
         canvas.lines = self.lines[:]
         canvas.bbox = self.bbox.copy()
         canvas.state = self.state.copy()
-        canvas.CESHOW = self.CESHOW
+        canvas.deps = self.deps.copy()
         return canvas
 
     def resetbbox(self):
@@ -215,12 +220,15 @@ class Canvas:
             self.lines.append("s")
         self.bbox |= bbox.BBox(points)
 
-    def addtext(self, pos, text, size, font="Times-Bold"):
+    def addtext(self, pos, text, size, font="Times-Bold", anchor="l"):
+        assert anchor in "c t tr r br b bl l tl".split()
+        key = "s" + anchor
         x, y = pos
-        fmt = "({}) {} /{} {} {} ceshow"
-        line = fmt.format(text, size, font, x, y)
+        fmt = "({}) {} /{} {} {} {}"
+        line = fmt.format(text, size, font, x, y, key)
         self.lines.append(line)
-        self.CESHOW = True
+        self.deps.add(key)
+        self.deps.update(DEPS.get(key, set()))
 
     def addimage(self, data, width, position=None, scale=1, color=False):
         cwidth = (3 * width) if color else width
@@ -266,6 +274,9 @@ class Canvas:
         line = "1 setlinejoin"
         pre.append(line)
         pre.append(COMMONDEF)
+        for key in KEYS:
+            if key in self.deps:
+                pre.append(DEFS[key])
         if size is not None:
             line = "{} {} translate".format(size / 2, size / 2)
             pre.append(line)
@@ -275,8 +286,6 @@ class Canvas:
             cx, cy = bb.center()
             line = "{} {} translate".format(-cx, -cy)
             pre.append(line)
-        if self.CESHOW:
-            pre.append(CESHOWDEF)
         with open(path, "w") as f:
             for line in pre + self.lines:
                 f.write(line + '\n')

@@ -1,0 +1,45 @@
+/sz { % (string) fontsize fontname -- (string) dy dx
+    findfont exch scalefont setfont % s
+    gs
+        dup false charpath flattenpath pathbbox % s x0 y0 x1 y1
+    gr
+    3 -1 roll sub % s x0 x1 dy
+    3 1 roll sub neg % s dy dx
+} bd
+
+/sc { % (string) fontsize fontname x y
+    m sz -2 div exch -2 div rm show
+} bd
+
+/st { % (string) fontsize fontname x y
+    m sz -2 div exch neg rm show
+} bd
+
+/str { % (string) fontsize fontname x y
+    m sz neg exch neg rm show
+} bd
+
+/sr { % (string) fontsize fontname x y
+    m sz neg exch -2 div rm show
+} bd
+
+/sbr { % (string) fontsize fontname x y
+    m sz neg exch pop 0 rm show
+} bd
+
+/sb { % (string) fontsize fontname x y
+    m sz -2 div exch pop 0 rm show
+} bd
+
+/sbl { % (string) fontsize fontname x y
+    m sz pop 0 exch pop 0 rm show
+} bd
+
+/sl { % (string) fontsize fontname x y
+    m sz pop 0 exch -2 div rm show
+} bd
+
+/stl { % (string) fontsize fontname x y
+    m sz pop 0 exch neg rm show
+} bd
+
