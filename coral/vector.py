@@ -26,7 +26,6 @@ from functools import reduce
 from . import bbox, tqdm
 
 # ToDo:
-#   - redefine some operators (lineto) to generate smaller files
 #   - generalize state dict
 
 PSDEFAULTS = dict(
@@ -36,20 +35,37 @@ PSDEFAULTS = dict(
   dash = ([], 0),
 )
 
+COMMONDEF = """
+/bd {bind def} bind def
+/m {moveto} bd
+/rm {rmoveto} bd
+/l {lineto} bd
+/rl {rlineto} bd
+/w {setlinewidth} bd
+/v {setgray} bd
+/rgb {setrgbcolor} bd
+/gs {gsave} bd
+/gr {grestore} bd
+/s {stroke} bd
+/f {fill} bd
+/np {newpath} bd
+/cp {closepath} bd
+"""
+
 CESHOWDEF = """
 /ceshow { % (string) fontsize fontname x y
-    gsave
-        moveto findfont exch scalefont setfont % s
-        gsave
+    gs
+        m findfont exch scalefont setfont % s
+        gs
             dup false charpath flattenpath pathbbox % s x0 y0 x1 y1
-        grestore
+        gr
         3 -1 roll sub % s x0 x1 dy
         3 1 roll sub % s dy -dx
         2 div exch % s -dx/2 dy
         -2 div % s -dx/2 -dy/2
-        rmoveto show
-    grestore
-} bind def
+        rm show
+    gr
+} bd
 """
 
 class Canvas:
@@ -74,14 +90,14 @@ class Canvas:
     def setgray(self, v):
         if self.state['gray'] == v:
             return
-        line = "{} setgray".format(v)
+        line = "{} v".format(v)
         self.lines.append(line)
         self.state['gray'] = v
 
     def setcolor(self, r, g, b):
         if self.state['color'] == (r, g, b):
             return
-        line = "{} {} {} setrgbcolor".format(r, g, b)
+        line = "{} {} {} rgb".format(r, g, b)
         self.lines.append(line)
         self.state['color'] = (r, g, b)
 
@@ -97,7 +113,7 @@ class Canvas:
     def setwidth(self, w):
         if self.state['width'] == w:
             return
-        line = "{} setlinewidth".format(w)
+        line = "{} w".format(w)
         self.lines.append(line)
         self.state['width'] = w
 
@@ -112,18 +128,18 @@ class Canvas:
     def addcircle(self, center, radius, fill=None, stroke=None):
         x, y = center
         r = radius
-        line = "{} {} {} 0 360 arc closepath".format(x, y, r)
+        line = "{} {} {} 0 360 arc cp".format(x, y, r)
         self.lines.append(line)
         if fill is not None:
             if stroke is not None:
-                self.lines.append("gsave")
+                self.lines.append("gs")
             self.setink(fill)
-            self.lines.append("fill")
+            self.lines.append("f")
         if stroke is not None:
             if fill is not None:
-                self.lines.append("grestore")
+                self.lines.append("gr")
             self.setink(stroke)
-            self.lines.append("stroke")
+            self.lines.append("s")
         self.bbox |= bbox.BBox((x - r, y - r), (x + r, y + r))
 
     def addpolyline(self, points, stroke=None):
@@ -132,19 +148,19 @@ class Canvas:
             x0, y0 = x1, y1 = next(points)
         except StopIteration:
             return
-        self.lines.append("newpath")
-        line = "{} {} moveto".format(x0, y0)
+        self.lines.append("np")
+        line = "{} {} m".format(x0, y0)
         self.lines.append(line)
         for x, y in points:
             if   x < x0: x0 = x
             elif x > x1: x1 = x
             if   y < y0: y0 = y
             elif y > y1: y1 = y
-            line = "{} {} lineto".format(x, y)
+            line = "{} {} l".format(x, y)
             self.lines.append(line)
         if stroke is not None:
             self.setink(stroke)
-        self.lines.append("stroke")
+        self.lines.append("s")
         self.bbox |= bbox.BBox((x0, y0), (x1, y1))
 
     def addpolygon(self, points, fill=None, stroke=None):
@@ -153,50 +169,50 @@ class Canvas:
             x0, y0 = x1, y1 = next(points)
         except StopIteration:
             return
-        self.lines.append("newpath")
-        line = "{} {} moveto".format(x0, y1)
+        self.lines.append("np")
+        line = "{} {} m".format(x0, y1)
         self.lines.append(line)
         for x, y in points:
             if   x < x0: x0 = x
             elif x > x1: x1 = x
             if   y < y0: y0 = y
             elif y > y1: y1 = y
-            line = "{} {} lineto".format(x, y)
+            line = "{} {} l".format(x, y)
             self.lines.append(line)
-        self.lines.append("closepath")
+        self.lines.append("cp")
         if fill is not None:
             if stroke is not None:
-                self.lines.append("gsave")
+                self.lines.append("gs")
             self.setink(fill)
-            self.lines.append("fill")
+            self.lines.append("f")
         if stroke is not None:
             if fill is not None:
-                self.lines.append("grestore")
+                self.lines.append("gr")
             self.setink(stroke)
-            self.lines.append("stroke")
+            self.lines.append("s")
         self.bbox |= bbox.BBox((x0, y0), (x1, y1))
 
     def addroundedpolygon(self, points, radius, fill=None, stroke=None):
-        self.lines.append("newpath")
+        self.lines.append("np")
         (x1, y1), (x2, y2) = points[:2]
         startend = ((x1 + x2) / 2, (y1 + y2) / 2)
         poly = [startend] + points[1:] + points[:1]
-        line = "{} {} moveto".format(*startend)
+        line = "{} {} m".format(*startend)
         self.lines.append(line)
         for (x1, y1), (x2, y2) in zip(poly[1:], poly[2:] + poly[:1]):
             line = "{} {} {} {} {} arcto".format(x1, y1, x2, y2, radius)
             self.lines.append(line)
-        self.lines.append("closepath")
+        self.lines.append("cp")
         if fill is not None:
             if stroke is not None:
-                self.lines.append("gsave")
+                self.lines.append("gs")
             self.setink(fill)
-            self.lines.append("fill")
+            self.lines.append("f")
         if stroke is not None:
             if fill is not None:
-                self.lines.append("grestore")
+                self.lines.append("gr")
             self.setink(stroke)
-            self.lines.append("stroke")
+            self.lines.append("s")
         self.bbox |= bbox.BBox(points)
 
     def addtext(self, pos, text, size, font="Times-Bold"):
@@ -211,7 +227,7 @@ class Canvas:
         height = len(data) // cwidth
         swidth = width * scale
         sheight = height * scale
-        self.lines.append("gsave")
+        self.lines.append("gs")
         if position is not None:
             self.lines.append("{} {} translate".format(*position))
         fmt = "{} {} scale"
@@ -232,7 +248,7 @@ class Canvas:
             self.lines.append("false 3 colorimage")
         else:
             self.lines.append("image")
-        self.lines.append("grestore")
+        self.lines.append("gr")
         tx, ty = position or (0, 0)
         self.bbox |= bbox.BBox((tx, ty), (swidth + tx, sheight + ty))
 
@@ -249,6 +265,7 @@ class Canvas:
         pre.append(line)
         line = "1 setlinejoin"
         pre.append(line)
+        pre.append(COMMONDEF)
         if size is not None:
             line = "{} {} translate".format(size / 2, size / 2)
             pre.append(line)
