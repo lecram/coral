@@ -91,35 +91,6 @@ class Buffer:
         self.s = self._inc(self.s)
         return o
 
-def _test_buffer():
-    print("Running tests...")
-    N = 4
-    assert N > 2
-    b = Buffer(N)
-    assert b.isempty()
-    assert not b.isfull()
-    b.push(5)
-    b.push(7)
-    assert not b.isempty()
-    assert not b.isfull()
-    assert b.pop() == 7
-    b.push(11)
-    assert b.shift() == 5
-    assert b.shift() == 11
-    for i in range(23):
-        if b.isfull():
-            b.shift()
-        b.push(i)
-    assert not b.isempty()
-    assert b.isfull()
-    assert b.pop() == 22
-    assert b.shift() == 19
-    assert b.shift() == 20
-    assert b.pop() == 21
-    assert b.isempty()
-    assert not b.isfull()
-    print("OK")
-
 #http://en.wikipedia.org/wiki/Earth_radius#Geocentric_radius
 def radiusat(lat, ellipsoid=None):
     if ellipsoid is None:
