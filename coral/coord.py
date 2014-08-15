@@ -45,6 +45,9 @@ class Buffer:
         self._m1 = n - 1
         self._m2 = (n << 1) - 1
 
+    def __repr__(self):
+        return "Buffer({})".format(self.n)
+
     def __str__(self):
         if self.isempty():
             return "<>"
