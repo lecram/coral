@@ -38,7 +38,7 @@ nearest = lambda x: int(x + math.copysign(0.5, x))
 class Buffer:
 
     def __init__(self, n):
-        assert n & (n - 1) == 0 # n must be a power of two.
+        assert (n & (n - 1) == 0), "Buffer length must be a power of two."
         self.n = n
         self.buf = [None] * n
         self.s = self.e = 0
@@ -70,23 +70,23 @@ class Buffer:
         return self.e == self.s ^ self.n
 
     def push(self, o):
-        assert not self.isfull()
+        assert not self.isfull(), "cannot push to full Buffer."
         self.buf[self.e & self._m1] = o
         self.e = self._inc(self.e)
 
     def pop(self):
-        assert not self.isempty()
+        assert not self.isempty(), "cannot pop from empty Buffer."
         self.e = self._dec(self.e)
         o = self.buf[self.e & self._m1]
         return o
 
     def peek(self):
-        assert not self.isempty()
+        assert not self.isempty(), "cannot peek at empty Buffer."
         o = self.buf[self._dec(self.e) & self._m1]
         return o
 
     def shift(self):
-        assert not self.isempty()
+        assert not self.isempty(), "cannot shift empty Buffer."
         o = self.buf[self.s & self._m1]
         self.s = self._inc(self.s)
         return o
