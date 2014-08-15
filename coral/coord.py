@@ -55,7 +55,7 @@ class Buffer:
             while i != end:
                 seq.append(self.buf[i & self._m1])
                 i = self._inc(i)
-            return "<{}>".format(" ".join(seq))
+            return "<{}>".format(" ".join(map(str, seq)))
 
     def _inc(self, i):
         return (i + 1) & self._m2
