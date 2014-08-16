@@ -59,11 +59,11 @@ PYTHON3 = sys.version_info[0] == 3
 if PYTHON3:
     xrange = range
 
-def b(v):
+def b(v, encoding='utf-8'):
     if PYTHON3:
         if isinstance(v, str):
             # For python 3 encode str to bytes.
-            return v.encode('utf-8')
+            return v.encode(encoding)
         elif isinstance(v, bytes):
             # Already bytes.
             return v
@@ -74,11 +74,11 @@ def b(v):
         # For python 2 assume str passed in and return str.
         return v
 
-def u(v):
+def u(v, encoding='utf-8'):
     if PYTHON3:
         if isinstance(v, bytes):
             # For python 3 decode bytes to str.
-            return v.decode('utf-8')
+            return v.decode(encoding)
         elif isinstance(v, str):
             # Already str.
             return v
@@ -235,6 +235,7 @@ class Reader:
         self.numRecords = None
         self.fields = []
         self.__dbfHdrLength = 0
+        self.encoding = kwargs.get("encoding", 'utf-8')
         # See if a shapefile name was passed as an argument
         if len(args) > 0:
             if is_string(args[0]):
@@ -259,6 +260,12 @@ class Reader:
             self.load()
         else:
             raise ShapefileException("Shapefile Reader requires a shapefile or file-like object.")
+
+    def b(self, v):
+        return b(v, self.encoding)
+
+    def u(self, v):
+        return u(v, self.encoding)
 
     def load(self, shapefile=None):
         """Opens a shapefile from a filename or file-like
@@ -464,17 +471,17 @@ class Reader:
             fieldDesc = list(unpack("<11sc4xBB14x", dbf.read(32)))
             name = 0
             idx = 0
-            if b("\x00") in fieldDesc[name]:
-                idx = fieldDesc[name].index(b("\x00"))
+            if self.b("\x00") in fieldDesc[name]:
+                idx = fieldDesc[name].index(self.b("\x00"))
             else:
                 idx = len(fieldDesc[name]) - 1
             fieldDesc[name] = fieldDesc[name][:idx]
-            fieldDesc[name] = u(fieldDesc[name])
+            fieldDesc[name] = self.u(fieldDesc[name])
             fieldDesc[name] = fieldDesc[name].lstrip()
-            fieldDesc[1] = u(fieldDesc[1])
+            fieldDesc[1] = self.u(fieldDesc[1])
             self.fields.append(fieldDesc)
         terminator = dbf.read(1)
-        assert terminator == b("\r")
+        assert terminator == self.b("\r")
         self.fields.insert(0, ('DeletionFlag', 'C', 1, 0))
 
     def __recordFmt(self):
@@ -490,7 +497,7 @@ class Reader:
         f = self.__getFileObj(self.dbf)
         recFmt = self.__recordFmt()
         recordContents = unpack(recFmt[0], f.read(recFmt[1]))
-        if recordContents[0] != b(' '):
+        if recordContents[0] != self.b(' '):
             # deleted record
             return None
         record = []
@@ -502,24 +509,24 @@ class Reader:
                 record.append(value)
                 continue
             elif typ == "N":
-                value = value.replace(b('\0'), b('')).strip()
-                if value == b(''):
+                value = value.replace(self.b('\0'), self.b('')).strip()
+                if value == self.b(''):
                     value = 0
                 elif deci:
                     value = float(value)
                 else:
                     value = int(value)
-            elif typ == b('D'):
+            elif typ == self.b('D'):
                 try:
                     y, m, d = int(value[:4]), int(value[4:6]), int(value[6:8])
                     value = [y, m, d]
                 except:
                     value = value.strip()
-            elif typ == b('L'):
-                value = (value in b('YyTt') and b('T')) or \
-                                        (value in b('NnFf') and b('F')) or b('?')
+            elif typ == self.b('L'):
+                value = (value in self.b('YyTt') and self.b('T')) or \
+                                        (value in self.b('NnFf') and self.b('F')) or self.b('?')
             else:
-                value = u(value)
+                value = self.u(value)
                 value = value.strip()
             record.append(value)
         return record
@@ -575,7 +582,7 @@ class Reader:
 
 class Writer:
     """Provides write support for ESRI Shapefiles."""
-    def __init__(self, shapeType=None):
+    def __init__(self, shapeType=None, encoding='utf-8'):
         self._shapes = []
         self.fields = []
         self.records = []
@@ -588,6 +595,13 @@ class Writer:
         self._lengths = []
         # Use deletion flags in dbf? Default is false (0).
         self.deletionFlag = 0
+        self.encoding = encoding
+
+    def b(self, v):
+        return b(v, self.encoding)
+
+    def u(self, v):
+        return u(v, self.encoding)
 
     def __getFileObj(self, f):
         """Safety handler to verify file-like objects"""
@@ -760,15 +774,15 @@ class Writer:
         # Field descriptors
         for field in self.fields:
             name, fieldType, size, decimal = field
-            name = b(name)
-            name = name.replace(b(' '), b('_'))
-            name = name.ljust(11).replace(b(' '), b('\x00'))
-            fieldType = b(fieldType)
+            name = self.b(name)
+            name = name.replace(self.b(' '), self.b('_'))
+            name = name.ljust(11).replace(self.b(' '), self.b('\x00'))
+            fieldType = self.b(fieldType)
             size = int(size)
             fld = pack('<11sc4xBB14x', name, fieldType, size, decimal)
             f.write(fld)
         # Terminator
-        f.write(b('\r'))
+        f.write(self.b('\r'))
 
     def __shpRecords(self):
         """Write the shp records"""
@@ -894,7 +908,7 @@ class Writer:
         f = self.__getFileObj(self.dbf)
         for record in self.records:
             if not self.fields[0][0].startswith("Deletion"):
-                f.write(b(' ')) # deletion flag
+                f.write(self.b(' ')) # deletion flag
             for (fieldName, fieldType, size, dec), value in zip(self.fields, record):
                 fieldType = fieldType.upper()
                 size = int(size)
@@ -905,7 +919,7 @@ class Writer:
                 else:
                     value = str(value)[:size].ljust(size)
                 assert len(value) == size
-                value = b(value)
+                value = self.b(value)
                 f.write(value)
 
     def null(self):
