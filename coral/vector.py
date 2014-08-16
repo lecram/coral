@@ -302,7 +302,7 @@ class Canvas:
             return ret
         if background is not None:
             color = tuple(round(c*255) for c in background)
-            cmd = "convert {} -background rgb{} -flatten {}"
+            cmd = "convert {} -background 'rgb{}' -flatten {}"
             cmd = cmd.format(path, color, path)
             ret = subprocess.call(cmd, shell=True)
         return ret
@@ -316,7 +316,7 @@ def export(pspath, output, device='png256', background=None):
         return ret
     if background is not None:
         color = tuple(round(c*255) for c in background)
-        cmd = "convert {} -background rgb{} -flatten {}"
+        cmd = "convert {} -background 'rgb{}' -flatten {}"
         cmd = cmd.format(path, color, path)
         ret = subprocess.call(cmd, shell=True)
     return ret
