@@ -4,6 +4,83 @@ Coral
 
 Coral is a library of digital cartography functions implemented in Python 3.
 
+Examples
+--------
+
+1. Simple map of Africa.
+
+.. code:: python
+
+    from coral import shapefile, tqdm, coord, proj, vector
+    
+    # Choose projection and scale.
+    prj = proj.TransMercator()
+    pixsz = 5000 # meters/pixel
+    
+    # Load shapefile.
+    sfpath = "data/ne_50m_admin_0_countries"
+    sf = shapefile.Reader(sfpath, encoding='latin1')
+    
+    # Draw countries to canvas.
+    cvs = vector.Canvas()
+    for sr in tqdm.tqdm(sf.shapeRecords()):
+        # Ignore countries not in Africa.
+        if sr.record[54] != "Africa":
+            continue
+        points = sr.shape.points
+        offsets = list(sr.shape.parts) + [len(points)]
+        for a, b in zip(offsets[:-1], offsets[1:]):
+            # Ignore some small islands.
+            if b - a < 50:
+                continue
+            # Project points.
+            polygon = (prj.geo2rect(lon, lat) for lon, lat in points[a:b])
+            # Simplify polygons to reduce number of points.
+            polygon = coord.simplify(polygon, pixsz)
+            cvs.addpolygon(polygon, stroke=0)
+    cvs.save("africa.eps")
+
+
+2. Simple map of Europe with color.
+
+.. code:: python
+
+    from coral import shapefile, tqdm, coord, proj, vector
+    
+    parallels = 42, 65
+    prj = proj.ConicEqualArea(parallels)
+    pixsz = 10000
+    
+    # Define some colors
+    land =  0.4, 0.9, 0.2
+    border = 1, 1, 1 # this is white
+    ocean = 0.5, 0.8, 0.9
+    
+    sfpath = "data/ne_50m_admin_0_countries"
+    sf = shapefile.Reader(sfpath, encoding='latin1')
+    
+    cvs = vector.Canvas()
+    for sr in tqdm.tqdm(sf.shapeRecords()):
+        if sr.record[54] != "Europe":
+            continue
+        # Russia is too big for a sample map :)
+        if sr.record[4] == "RUS":
+            continue
+        points = sr.shape.points
+        offsets = list(sr.shape.parts) + [len(points)]
+        for a, b in zip(offsets[:-1], offsets[1:]):
+            # Remove some lands outside the region of interest.
+            lon, lat = points[a]
+            if not -25 < lon < 41 or not 35 < lat < 72:
+                continue
+            polygon = (prj.geo2rect(lon, lat) for lon, lat in points[a:b])
+            polygon = coord.simplify(polygon, pixsz)
+            cvs.addpolygon(polygon, fill=land, stroke=border)
+    # Create a nice PNG file.
+    # This requires both Ghostscript and ImageMagick.
+    # Specifically, the commands `gs` and `convert` must be on the $PATH.
+    cvs.export("europe.png", device="pngalpha", background=ocean)
+
 License
 -------
 
