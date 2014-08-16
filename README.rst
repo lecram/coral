@@ -69,19 +69,19 @@ Download it and unzip its contents to a folder named ``data``.
     for sr in tqdm.tqdm(sf.shapeRecords()):
         if sr.record[54] != "Europe":
             continue
-        # Russia is too big for a sample map :)
-        if sr.record[4] == "RUS":
-            continue
         points = sr.shape.points
         offsets = list(sr.shape.parts) + [len(points)]
         for a, b in zip(offsets[:-1], offsets[1:]):
-            # Remove some lands outside the region of interest.
+            # Prevent some lands from interfering on the region of interest.
             lon, lat = points[a]
-            if not -25 < lon < 41 or not 35 < lat < 72:
-                continue
+            outside = not -25 < lon < 41 or not 35 < lat < 72
+            if outside:
+                bb = cvs.bbox
             polygon = (prj.geo2rect(lon, lat) for lon, lat in points[a:b])
             polygon = coord.simplify(polygon, pixsz)
             cvs.addpolygon(polygon, fill=land, stroke=border)
+            if outside:
+                cvs.bbox = bb
     # Create a nice PNG file.
     # This requires both Ghostscript and ImageMagick.
     # Specifically, the commands `gs` and `convert` must be on the $PATH.
