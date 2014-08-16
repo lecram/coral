@@ -7,6 +7,9 @@ Coral is a library of digital cartography functions implemented in Python 3.
 Examples
 --------
 
+The examples bellow use `a public domain shapefile from the Natural Earth project <http://www.naturalearthdata.com/downloads/50m-cultural-vectors/50m-admin-0-countries-2/>`_.
+Download it and unzip its contents to a folder named ``data``.
+
 1. Simple map of Africa.
 
 .. code:: python
