@@ -392,7 +392,7 @@ class ConicEqualArea(CProj):
     "Albers Equal-Area Conic Projection for the Spherical Earth."
 
     def __init__(self, *args, **kwargs):
-        Proj.__init__(self, *args, **kwargs)
+        CProj.__init__(self, *args, **kwargs)
         self.coslat1 = math.cos(self.lat1)
         self.coslat12 = self.coslat1 * self.coslat1
         self.sinlat1 = math.sin(self.lat1)
