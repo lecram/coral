@@ -374,23 +374,3 @@ class AzimuthalEqualArea(Proj):
 
     def scale(self, lon, lat):
         raise NotImplemented("scale is not implemented for Azimuthal Equal-Area")
-
-if __name__ == "__main__":
-    p = 0
-    for proj in Mercator(), EMercator(), TransMercator():
-        for lat1 in range(-90, 90, 5):
-            for lon1 in range(-180, 180, 5):
-                try:
-                    lon2, lat2 = proj.rect2geo(*proj.geo2rect(lon1, lat1))
-                except ProjectionError as e:
-                    print(proj)
-                    print(e)
-                    continue
-                except:
-                    print(proj, lon1, lat1)
-                    raise
-                try:
-                    assert (round(lon1, p), round(lat1, p)) == (round(lon2, p), round(lat2, p))
-                except:
-                    print(proj, lon1, lat1, lon2, lat2)
-                    raise
