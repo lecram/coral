@@ -43,6 +43,9 @@ Download it and unzip its contents to a folder named ``data``.
             cvs.addpolygon(polygon, stroke=0)
     cvs.save("africa.eps")
 
+.. image:: img/africa.png
+  :align: center
+  :scale: 25 %
 
 2. Simple map of Europe with color.
 
@@ -83,6 +86,9 @@ Download it and unzip its contents to a folder named ``data``.
     # This requires both Ghostscript and ImageMagick.
     # Specifically, the commands `gs` and `convert` must be on the $PATH.
     cvs.export("europe.png", device="pngalpha", background=ocean)
+
+.. image:: img/europe.png
+  :align: center
 
 License
 -------
