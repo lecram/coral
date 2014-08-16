@@ -55,7 +55,7 @@ Download it and unzip its contents to a folder named ``data``.
     
     parallels = 42, 65
     prj = proj.ConicEqualArea(parallels)
-    pixsz = 10000
+    pixsz = 5000
     
     # Define some colors
     land =  0.4, 0.9, 0.2
@@ -89,6 +89,7 @@ Download it and unzip its contents to a folder named ``data``.
 
 .. image:: img/europe.png
   :align: center
+  :scale: 50 %
 
 License
 -------
