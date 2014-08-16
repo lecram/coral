@@ -77,6 +77,19 @@ class Proj:
         else:
             self.r = radius
 
+class CProj:
+
+    def __init__(self, parallels=None, radius=None):
+        if parallels is None:
+            lat1, lat2 = 0, 0
+        else:
+            lat1, lat2 = parallels
+        self.lat1, self.lat2 = math.radians(lat1), math.radians(lat2)
+        if radius is None:
+            self.r = (WGS84.a + WGS84.b) / 2
+        else:
+            self.r = radius
+
 class EProj:
 
     def __init__(self, origin=None, ellipsoid=None):
@@ -374,3 +387,48 @@ class AzimuthalEqualArea(Proj):
 
     def scale(self, lon, lat):
         raise NotImplemented("scale is not implemented for Azimuthal Equal-Area")
+
+class ConicEqualArea(CProj):
+    "Albers Equal-Area Conic Projection for the Spherical Earth."
+
+    def __init__(self, *args, **kwargs):
+        Proj.__init__(self, *args, **kwargs)
+        self.coslat1 = math.cos(self.lat1)
+        self.coslat12 = self.coslat1 * self.coslat1
+        self.sinlat1 = math.sin(self.lat1)
+        self.sinlat2 = math.sin(self.lat2)
+        self.n = (self.sinlat1 + self.sinlat2) / 2
+        self.c = self.coslat12 + 2 * self.n * self.sinlat1
+        self.p0 = self.r * math.sqrt(self.c) / self.n
+
+    def geo2rect(self, lon, lat):
+        lon, lat = math.radians(lon), math.radians(lat)
+        sinlat = math.sin(lat)
+        p = self.r * math.sqrt(self.c - 2 * self.n * sinlat) / self.n
+        t = self.n * lon
+        x = p * math.sin(t)
+        y = self.p0 - p * math.cos(t)
+        return x, y
+
+    def rect2geo(self, x, y):
+        p = math.sqrt(x*x + (self.p0-y)*(self.p0-y))
+        if self.n < 0:
+            p0 = -self.p0
+            x, y = -x, -y
+        else:
+            p0 = self.p0
+        t = math.atan2(x, p0 - y)
+        lon = t / self.n
+        pnr = p * self.n / self.r
+        lat = math.asin((self.c - pnr*pnr) / (2 * self.n))
+        lon, lat = math.degrees(lon), math.degrees(lat)
+        return lon, lat
+
+    def scale(self, lon, lat):
+        # This returns the scale along the meridians (h).
+        # The scale along the paralles (k) is the reciprocal of h.
+        lat = math.radians(lat)
+        coslat = math.cos(lat)
+        sinlat = math.sin(lat)
+        h = coslat / math.sqrt(self.c - 2 * self.n * sinlat)
+        return h
