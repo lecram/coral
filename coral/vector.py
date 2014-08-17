@@ -272,10 +272,9 @@ class Canvas:
             x0, y0, x1, y1 = 0, 0, size, size
         line = "%%BoundingBox: {} {} {} {}".format(x0, y0, x1, y1)
         pre.append(line)
-        pre.append("")
+        pre.append(COMMONDEF)
         line = "1 setlinejoin"
         pre.append(line)
-        pre.append(COMMONDEF)
         for key in KEYS:
             if key in self.deps:
                 pre.append(DEFS[key])
@@ -297,6 +296,7 @@ class Canvas:
             else:
                 line = "{} v f".format(self.bgcolor)
             pre.append(line)
+        pre.append("")
         with open(path, "w") as f:
             for line in pre + self.lines:
                 f.write(line + '\n')
