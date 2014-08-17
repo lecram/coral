@@ -75,14 +75,15 @@ DEPS = {k: set(["sz"]) for k in "sc st str sr sbr sb sbl sl stl".split()}
 
 class Canvas:
 
-    def __init__(self):
+    def __init__(self, bgcolor=None):
+        self.bgcolor = bgcolor
         self.lines = []
         self.bbox = bbox.BBox()
         self.state = PSDEFAULTS.copy()
         self.deps = set()
 
     def copy(self):
-        canvas = Canvas()
+        canvas = Canvas(self.bgcolor)
         canvas.lines = self.lines[:]
         canvas.bbox = self.bbox.copy()
         canvas.state = self.state.copy()
@@ -286,6 +287,15 @@ class Canvas:
             pre.append(line)
             cx, cy = bb.center()
             line = "{} {} translate".format(-cx, -cy)
+            pre.append(line)
+        if self.bgcolor is not None:
+            fmt = "np {} {} m {} {} l {} {} l {} {} l cp"
+            line = fmt.format(x0, y0, x1, y0, x1, y1, x0, y1)
+            pre.append(line)
+            if isinstance(self.bgcolor, tuple):
+                line = "{} {} {} rgb f".format(*self.bgcolor)
+            else:
+                line = "{} v f".format(self.bgcolor)
             pre.append(line)
         with open(path, "w") as f:
             for line in pre + self.lines:
