@@ -53,7 +53,13 @@ Download it and unzip its contents to a folder named ``data``.
 
     from coral import shapefile, tqdm, coord, proj, vector
     
-    parallels = 42, 65
+    # Define region of interest.
+    lon0, lon1 = -25, 41
+    lat0, lat1 = 35, 72
+    
+    # Define Albers Projection for region of interest.
+    latos = (lat1 - lat0) / 6
+    parallels = lat0 + latos, lat1 - latos
     prj = proj.ConicEqualArea(parallels)
     pixsz = 5000
     
@@ -74,7 +80,7 @@ Download it and unzip its contents to a folder named ``data``.
         for a, b in zip(offsets[:-1], offsets[1:]):
             # Prevent some lands from interfering on the region of interest.
             lon, lat = points[a]
-            outside = not -25 < lon < 41 or not 35 < lat < 72
+            outside = not lon0 < lon < lon1 or not lat0 < lat < lat1
             if outside:
                 bb = cvs.bbox
             polygon = (prj.geo2rect(lon, lat) for lon, lat in points[a:b])
