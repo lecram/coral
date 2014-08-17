@@ -65,7 +65,7 @@ Download it and unzip its contents to a folder named ``data``.
     sfpath = "data/ne_50m_admin_0_countries"
     sf = shapefile.Reader(sfpath, encoding='latin1')
     
-    cvs = vector.Canvas()
+    cvs = vector.Canvas(ocean)
     for sr in tqdm.tqdm(sf.shapeRecords()):
         if sr.record[54] != "Europe":
             continue
@@ -82,10 +82,7 @@ Download it and unzip its contents to a folder named ``data``.
             cvs.addpolygon(polygon, fill=land, stroke=border)
             if outside:
                 cvs.bbox = bb
-    # Create a nice PNG file.
-    # This requires both Ghostscript and ImageMagick.
-    # Specifically, the commands `gs` and `convert` must be on the $PATH.
-    cvs.export("europe.png", device="pngalpha", background=ocean)
+    cvs.save("europe.eps")
 
 .. image:: img/europe.png
   :align: center
