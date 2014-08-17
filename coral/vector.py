@@ -271,6 +271,7 @@ class Canvas:
             x0, y0, x1, y1 = 0, 0, size, size
         line = "%%BoundingBox: {} {} {} {}".format(x0, y0, x1, y1)
         pre.append(line)
+        pre.append("")
         line = "1 setlinejoin"
         pre.append(line)
         pre.append(COMMONDEF)
