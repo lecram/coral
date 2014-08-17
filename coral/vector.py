@@ -80,6 +80,11 @@ class Canvas:
         self.lines = []
         self.bbox = bbox.BBox()
         self.state = PSDEFAULTS.copy()
+        if bgcolor is not None:
+            if isinstance(bgcolor, tuple):
+                self.state['color'] = bgcolor
+            else:
+                self.state['gray'] = bgcolor
         self.deps = set()
 
     def copy(self):
