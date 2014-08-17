@@ -306,7 +306,7 @@ class Canvas:
             for line in pre + self.lines:
                 f.write(line + '\n')
 
-    def export(self, path, device='png256', background=None, *args, **kwargs):
+    def export(self, path, device='png256', *args, **kwargs):
         # useful devices: png{16,48,256,mono,gray,alpha}
         pspath = "/tmp/tempeps.ps"
         self.save(pspath, *args, **kwargs)
@@ -314,27 +314,13 @@ class Canvas:
         cmd += "-sDEVICE={} -sOutputFile='{}' {}".format(device, path, pspath)
         ret = subprocess.call(cmd, shell=True)
         os.remove(pspath)
-        if ret:
-            return ret
-        if background is not None:
-            color = tuple(round(c*255) for c in background)
-            cmd = "convert {} -background 'rgb{}' -flatten {}"
-            cmd = cmd.format(path, color, path)
-            ret = subprocess.call(cmd, shell=True)
         return ret
 
-def export(pspath, output, device='png256', background=None):
+def export(pspath, output, device='png256'):
     # useful devices: png{16,48,256,mono,gray,alpha}
     cmd  = "gs -q -dNOPAUSE -dBATCH -dEPSCrop "
     cmd += "-sDEVICE={} -sOutputFile={} {}".format(device, output, pspath)
     ret = subprocess.call(cmd, shell=True)
-    if ret:
-        return ret
-    if background is not None:
-        color = tuple(round(c*255) for c in background)
-        cmd = "convert {} -background 'rgb{}' -flatten {}"
-        cmd = cmd.format(path, color, path)
-        ret = subprocess.call(cmd, shell=True)
     return ret
 
 def animation(gifpath, frames, delay=10, *args, **kwargs):
