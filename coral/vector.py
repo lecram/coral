@@ -283,15 +283,6 @@ class Canvas:
         for key in KEYS:
             if key in self.deps:
                 pre.append(DEFS[key])
-        if size is not None:
-            line = "{} {} translate".format(size / 2, size / 2)
-            pre.append(line)
-            scl = (size - margin) / max(bb.width(), bb.height())
-            line = "{} {} scale".format(scl, scl)
-            pre.append(line)
-            cx, cy = bb.center()
-            line = "{} {} translate".format(-cx, -cy)
-            pre.append(line)
         if self.bgcolor is not None:
             fmt = "np {} {} m {} {} l {} {} l {} {} l cp"
             line = fmt.format(x0, y0, x1, y0, x1, y1, x0, y1)
@@ -300,6 +291,15 @@ class Canvas:
                 line = "{} {} {} rgb f".format(*self.bgcolor)
             else:
                 line = "{} v f".format(self.bgcolor)
+            pre.append(line)
+        if size is not None:
+            line = "{} {} translate".format(size / 2, size / 2)
+            pre.append(line)
+            scl = (size - margin) / max(bb.width(), bb.height())
+            line = "{} {} scale".format(scl, scl)
+            pre.append(line)
+            cx, cy = bb.center()
+            line = "{} {} translate".format(-cx, -cy)
             pre.append(line)
         pre.append("")
         with open(path, "w") as f:
