@@ -85,6 +85,15 @@ class BBox:
         else:
             return BBox((x0, y0), (x1, y1))
 
+    def __contains__(self, item):
+        if isinstance(item, BBox):
+            return self.has_bbox(item)
+        elif isinstance(item, tuple) and len(item) == 2:
+            return self.has_point(item)
+        else:
+            msg = "BBox or 2-tuple expected, got {}".format(type(item))
+            raise TypeError(msg)
+
     def copy(self):
         """Return an exact copy of the BBox."""
         return BBox((self.x0, self.y0), (self.x1, self.y1))
