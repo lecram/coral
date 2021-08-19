@@ -94,6 +94,19 @@ class BBox:
             msg = "BBox or 2-tuple expected, got {}".format(type(item))
             raise TypeError(msg)
 
+    def __add__(self, point):
+        return self.translate(*point)
+
+    def __sub__(self, point):
+        x, y = point
+        return self.translate(-x, -y)
+
+    def __mul__(self, factor):
+        return self.scale(factor)
+
+    def __truediv__(self, factor):
+        return self.scale(1/factor)
+
     def copy(self):
         """Return an exact copy of the BBox."""
         return BBox((self.x0, self.y0), (self.x1, self.y1))
